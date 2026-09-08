@@ -507,7 +507,6 @@ function setupGameListeners() {
         if (MP.isHost) MP.broadcast({ type: 'chat_system', msg: '🔊 **El GM está de vuelta.** Esperando su acción.' });
       }
     });
-  });
   }
 
   // Tirar dados (deshabilitado por defecto)
@@ -1305,6 +1304,7 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
 
 
 
