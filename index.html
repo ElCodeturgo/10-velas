@@ -58,15 +58,28 @@
   <p style="color:var(--flame); font-size:1.5rem; letter-spacing:3px;">Código: <strong id="lobby-code">----</strong></p>
   
   <div class="step-card" style="max-width:500px; margin:20px auto; text-align:left;">
+    <h3 style="margin-top:0;">Módulo de la Partida</h3>
+    <div id="lobby-module-host-view" style="display:none; margin-bottom: 20px;">
+      <select id="lobby-module-select" style="width:100%; padding:10px; background:var(--bg); color:var(--text); border:1px solid var(--border); font-size:1rem;">
+        <!-- Se llenará con JS -->
+      </select>
+    </div>
+    <div id="lobby-module-client-view" style="margin-bottom: 20px;">
+      <p style="color:var(--flame2); font-weight:bold; font-size:1.1rem;" id="lobby-module-name">Esperando a que el Host seleccione un módulo...</p>
+      <p id="lobby-module-desc" style="font-size:0.9rem; color:var(--text-dim);"></p>
+    </div>
+
     <h3>Jugadores Conectados</h3>
     <ul id="lobby-players-list" style="list-style:none; padding:0; font-size:1.1rem;">
       <!-- Se llenará dinámicamente -->
     </ul>
   </div>
 
-  <div style="margin-top:20px;">
+    <div style="margin-top:20px;">
+    <button class="btn-primary" id="btn-lobby-preset" style="background:#555; border:1px solid #777; padding:10px 15px; margin-right:10px;" title="Generar un personaje aleatorio para no tener que llenar los datos a mano">⚡ Personaje Aleatorio</button>
     <button class="btn-secondary" id="btn-lobby-ready" style="border-color:var(--hope); color:var(--hope2); padding:10px 30px;">Marcar como Listo</button>
-    <button class="btn-primary" id="btn-lobby-start" style="display:none; margin-top:15px; padding:10px 30px; width: 100%; max-width: 500px;">Seleccionar Módulo y Empezar</button>
+    <br>
+    <button class="btn-primary" id="btn-lobby-start" style="display:none; margin-top:15px; padding:10px 30px; width: 100%; max-width: 500px;">Ir a Crear Personajes</button>
   </div>
 </section>
 
@@ -535,14 +548,14 @@
 <!-- ═══════════════════════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════════════════════ -->
-<script src="js/config.js?v=6"></script>
-<script src="js/modules.js?v=6"></script>
-<script src="js/gameState.js?v=6"></script>
-<script src="js/dice.js?v=6"></script>
-<script src="js/tts.js?v=6"></script>
-<script src="js/ai.js?v=6"></script>
-<script src="js/multiplayer.js?v=6"></script>
-<script src="js/main.js?v=9"></script>
+<script src="js/config.js?v=12"></script>
+<script src="js/modules.js?v=12"></script>
+<script src="js/gameState.js?v=12"></script>
+<script src="js/dice.js?v=12"></script>
+<script src="js/tts.js?v=12"></script>
+<script src="js/ai.js?v=12"></script>
+<script src="js/multiplayer.js?v=12"></script>
+<script src="js/main.js?v=12"></script>
 
 <script>
   function showRules() { showModal('rules'); }
@@ -579,6 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 </body>
 </html>
+
+
+
+
+
 
 
 

@@ -110,6 +110,27 @@ const MP = {
       this.broadcast({ type: 'lobby_update', players: this.lobbyPlayers });
       this.updateLobbyUI();
     }
+            else if (data.type === 'pause_gm') {
+      const btnPauseGM = document.getElementById('btn-pause-gm');
+      if (btnPauseGM) btnPauseGM.click();
+    }
+        else if (data.type === 'request_roll') {
+      pendingRollAction = data.action;
+      const rollBtn = document.getElementById('btn-roll');
+      if (rollBtn) rollBtn.click();
+      else rollDice(); // Si el modal no está abierto, lo forza
+    }
+        else if (data.type === 'sync_character') {
+      if (!GameState.characters) GameState.characters = [];
+      const idx = GameState.characters.findIndex(c => c.name === data.character.name);
+      if (idx >= 0) GameState.characters[idx] = data.character;
+      else GameState.characters.push(data.character);
+      appendGMMessage(`📝 ${data.name} ha terminado de crear su personaje: ${data.character.name}.`, false);
+    }
+    else if (data.type === 'call_gm') {
+      const btnCallGM = document.getElementById('btn-call-gm');
+      if (btnCallGM) btnCallGM.click();
+    }
     else if (data.type === 'player_msg') {
       const fullMsg = `[${data.name}]: ${data.text}`;
       appendPlayerMessage(fullMsg);
@@ -156,9 +177,19 @@ const MP = {
       this.lobbyPlayers = data.players;
       this.updateLobbyUI();
     }
-    else if (data.type === 'start_game') {
-      // El host eligió el módulo y empezó la partida
-      showView('character'); // O 'module' si los clientes también lo ven, pero 'character' es mejor
+        else if (data.type === 'start_game') {
+      showView('game');
+    }
+    else if (data.type === 'start_character_creation') {
+      showView('character');
+      if (typeof goToCharStep === 'function') goToCharStep(1);
+    }
+    else if (data.type === 'sync_module') {
+      GameState.selectedModule = MODULES[data.modId];
+      const nameEl = document.getElementById('lobby-module-name');
+      const descEl = document.getElementById('lobby-module-desc');
+      if (nameEl) nameEl.textContent = GameState.selectedModule.title;
+      if (descEl) descEl.textContent = GameState.selectedModule.tagline;
     }
     else if (data.type === 'sync_state') {
       GameState.candlesLit = data.candlesLit;
@@ -191,6 +222,9 @@ const MP = {
     }
     else if (data.type === 'dice_result') {
       renderDiceResult(data.result, data.applied);
+    }
+        else if (data.type === 'hide_modal') {
+      hideModal(data.modalId);
     }
     else if (data.type === 'candle_out') {
       GameState.candlesLit = data.candles;
@@ -235,3 +269,8 @@ const MP = {
     }
   }
 };
+
+
+
+
+

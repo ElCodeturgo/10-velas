@@ -145,14 +145,31 @@ const GameState = {
     if (this.history.length > 30) this.history.shift();
   },
 
-  buildContextSummary() {
-    const c = this.character;
+    buildContextSummary() {
     const mod = this.selectedModule;
 
-    const virtueStatus = c.virtue.burned ? '[QUEMADA]' : (this.getActiveCard() === 'virtue' ? '[ACTIVA]' : '[INACTIVA]');
-    const viceStatus   = c.vice.burned   ? '[QUEMADO]' : (this.getActiveCard() === 'vice'   ? '[ACTIVO]'  : '[INACTIVO]');
-    const momentStatus = c.moment.burned ? '[QUEMADO]' : c.moment.lived ? '[VIVIDO]' : (this.getActiveCard() === 'moment' ? '[ACTIVO]' : '[INACTIVO]');
-    const brinkStatus  = c.brink.burned  ? '[QUEMADO]' : c.brink.active  ? '[ACTIVO - REVELADO]' : '[OCULTO]';
+    let charsText = '';
+    const allChars = (this.characters && this.characters.length > 0) ? this.characters : [this.character];
+    
+    allChars.forEach(c => {
+      const activeCard = c.stackOrder[Math.min(c.stackOrder.length - 1, (10 - this.candlesLit))];
+      
+      const virtueStatus = c.virtue.burned ? '[QUEMADA]' : (activeCard === 'virtue' ? '[ACTIVA]' : '[INACTIVA]');
+      const viceStatus   = c.vice.burned   ? '[QUEMADO]' : (activeCard === 'vice'   ? '[ACTIVO]'  : '[INACTIVO]');
+      const momentStatus = c.moment.burned ? '[QUEMADO]' : c.moment.lived ? '[VIVIDO]' : (activeCard === 'moment' ? '[ACTIVO]' : '[INACTIVO]');
+      const brinkStatus  = c.brink.burned  ? '[QUEMADO]' : c.brink.active  ? '[ACTIVO - REVELADO]' : '[OCULTO]';
+      
+      charsText += `
+--- PERSONAJE: ${c.name} ---
+Concepto: ${c.concept}. Apariencia: ${c.appearance}
+Rasgos: Virtud: ${c.virtue.name} ${virtueStatus} | Vicio: ${c.vice.name} ${viceStatus}
+Momento: ${c.moment.text} ${momentStatus}
+Tope: ${c.brink.text} ${brinkStatus}
+Naturaleza de Ellos (según ${c.name}): ${c.theyBrink}
+Inventario: ${c.inventory.length ? c.inventory.join(', ') : 'Vacío'}
+Heridas/Estados: ${c.conditions.length ? c.conditions.join(', ') : 'Ninguno'}
+`;
+    });
 
     const truthsSummary = this.allTruths
       .map((t, i) => `Escena ${i+1}: ${t.join(' | ')}`)
@@ -162,23 +179,14 @@ const GameState = {
 === ESTADO ACTUAL DEL JUEGO ===
 Módulo: ${mod?.title || '?'}
 Escena: ${this.scene} | Velas encendidas: ${this.candlesLit}/10
-Fase Final: ${this.isFinalPhase ? 'SÍ — ¡los conflictos fallidos matan!' : 'No'}
+Fase Final: ${this.isFinalPhase ? 'SÍ - ¡los conflictos fallidos matan!' : 'No'}
 
-=== PERSONAJE ===
-Nombre: ${c.name}
-Aspecto: ${c.appearance}
-Concepto: ${c.concept}
-Virtud: ${c.virtue.name} ${virtueStatus}
-Vicio: ${c.vice.name} ${viceStatus}
-Momento: "${c.moment.text}" ${momentStatus}
-Dado de Esperanza: ${c.moment.hopeDie ? 'SÍ' : 'No'}
-Tope: "${c.brink.text}" ${brinkStatus}
-Ellos pueden: ${c.theyBrink}
-Inventario: ${c.inventory.length ? c.inventory.join(', ') : 'nada'}
-Condiciones/Heridas: ${c.conditions.length ? c.conditions.join('; ') : 'ninguna'}
+=== JUGADORES EN LA SESIÓN ===
+${charsText}
 
 === VERDADES ESTABLECIDAS ===
-${truthsSummary || '(ninguna aún)'}
-    `.trim();
+${truthsSummary || 'Ninguna aún.'}
+`;
   }
 };
+

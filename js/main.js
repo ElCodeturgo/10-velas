@@ -82,10 +82,59 @@ function setupMenuListeners() {
         btn.textContent = oldText;
         btn.disabled = false;
         
-        document.getElementById('room-banner').style.display = 'block';
+                document.getElementById('room-banner').style.display = 'block';
         document.getElementById('room-code-display').textContent = roomCode;
         document.getElementById('lobby-code').textContent = roomCode;
         
+        // Setup Module Select for Host
+          const btnLobbyPreset = document.getElementById('btn-lobby-preset');
+  if (btnLobbyPreset) {
+    btnLobbyPreset.addEventListener('click', () => {
+      // Perfiles aleatorios
+      const profiles = [
+        { name: "Elena", appearance: "30 años, chaqueta de cuero, mirada cansada", concept: "Mecánica que perdió todo", virtue: "Ingeniosa", vice: "Desconfiada", moment: "...logre encender el viejo generador y haya luz otra vez.", brink: "abandonar a alguien a su suerte", they: "moverse sin hacer ruido y apagar la luz con solo acercarse" },
+        { name: "Marcus", appearance: "50 años, traje gastado, anteojos rotos", concept: "Ex-profesor universitario arrepentido", virtue: "Sabio", vice: "Cobarde", moment: "...pueda perdonarme a mí mismo por lo que hice.", brink: "mentir para salvar el propio pellejo", they: "imitar las voces de las personas que amamos" },
+        { name: "Sarah", appearance: "19 años, mochila pesada, asustada pero alerta", concept: "Estudiante intentando encontrar a su familia", virtue: "Determinada", vice: "Impulsiva", moment: "...tenga la prueba de que mi hermana sigue viva.", brink: "robar lo poco que le queda a los demás", they: "aparecer solo cuando parpadeamos" },
+        { name: "David", appearance: "40 años, uniforme de paramédico rasgado", concept: "Paramédico exhausto", virtue: "Altruista", vice: "Adicto", moment: "...salve una vida aunque me cueste la mía.", brink: "usar la fuerza letal contra un humano", they: "absorber la luz y devolver el frío absoluto" }
+      ];
+      
+      const p = profiles[Math.floor(Math.random() * profiles.length)];
+      
+      // Llenar inputs visuales
+      document.getElementById('input-name').value = p.name;
+      document.getElementById('input-appearance').value = p.appearance;
+      document.getElementById('input-concept').value = p.concept;
+      document.getElementById('input-virtue').value = p.virtue;
+      document.getElementById('input-vice').value = p.vice;
+      document.getElementById('input-moment').value = p.moment;
+      document.getElementById('input-brink').value = p.brink;
+      document.getElementById('input-they').value = p.they;
+      
+      // Inventario por defecto
+      GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
+      
+      btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
+      btnLobbyPreset.style.background = 'var(--hope)';
+      btnLobbyPreset.style.color = '#000';
+      
+      // Auto-marcar como Listo si no lo estaba
+      const btnReady = document.getElementById('btn-lobby-ready');
+      if (btnReady && btnReady.textContent === 'Marcar como Listo') {
+        btnReady.click();
+      }
+    });
+  }
+
+  const modSelect = document.getElementById('lobby-module-select');
+        if (modSelect) {
+          modSelect.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
+          Object.values(MODULES).forEach(mod => {
+            modSelect.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
+          });
+          document.getElementById('lobby-module-host-view').style.display = 'block';
+          document.getElementById('lobby-module-client-view').style.display = 'none'; // El host usa el select
+        }
+
         showView('lobby');
       }, (err) => {
         btn.textContent = oldText;
@@ -113,16 +162,66 @@ function setupMenuListeners() {
     
         MP.initClient(code, name, () => {
       document.getElementById('modal-join').style.display = 'none';
-      document.getElementById('room-banner').style.display = 'block';
-      document.getElementById('room-code-display').textContent = 'CONECTADO A: ' + code.toUpperCase();
-      document.getElementById('lobby-code').textContent = code.toUpperCase();
-      showView('lobby');
+              document.getElementById('room-banner').style.display = 'block';
+        document.getElementById('room-code-display').textContent = roomCode;
+        document.getElementById('lobby-code').textContent = roomCode;
+        
+        // Setup Module Select for Host
+          const btnLobbyPreset = document.getElementById('btn-lobby-preset');
+  if (btnLobbyPreset) {
+    btnLobbyPreset.addEventListener('click', () => {
+      // Perfiles aleatorios
+      const profiles = [
+        { name: "Elena", appearance: "30 años, chaqueta de cuero, mirada cansada", concept: "Mecánica que perdió todo", virtue: "Ingeniosa", vice: "Desconfiada", moment: "...logre encender el viejo generador y haya luz otra vez.", brink: "abandonar a alguien a su suerte", they: "moverse sin hacer ruido y apagar la luz con solo acercarse" },
+        { name: "Marcus", appearance: "50 años, traje gastado, anteojos rotos", concept: "Ex-profesor universitario arrepentido", virtue: "Sabio", vice: "Cobarde", moment: "...pueda perdonarme a mí mismo por lo que hice.", brink: "mentir para salvar el propio pellejo", they: "imitar las voces de las personas que amamos" },
+        { name: "Sarah", appearance: "19 años, mochila pesada, asustada pero alerta", concept: "Estudiante intentando encontrar a su familia", virtue: "Determinada", vice: "Impulsiva", moment: "...tenga la prueba de que mi hermana sigue viva.", brink: "robar lo poco que le queda a los demás", they: "aparecer solo cuando parpadeamos" },
+        { name: "David", appearance: "40 años, uniforme de paramédico rasgado", concept: "Paramédico exhausto", virtue: "Altruista", vice: "Adicto", moment: "...salve una vida aunque me cueste la mía.", brink: "usar la fuerza letal contra un humano", they: "absorber la luz y devolver el frío absoluto" }
+      ];
+      
+      const p = profiles[Math.floor(Math.random() * profiles.length)];
+      
+      // Llenar inputs visuales
+      document.getElementById('input-name').value = p.name;
+      document.getElementById('input-appearance').value = p.appearance;
+      document.getElementById('input-concept').value = p.concept;
+      document.getElementById('input-virtue').value = p.virtue;
+      document.getElementById('input-vice').value = p.vice;
+      document.getElementById('input-moment').value = p.moment;
+      document.getElementById('input-brink').value = p.brink;
+      document.getElementById('input-they').value = p.they;
+      
+      // Inventario por defecto
+      GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
+      
+      btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
+      btnLobbyPreset.style.background = 'var(--hope)';
+      btnLobbyPreset.style.color = '#000';
+      
+      // Auto-marcar como Listo si no lo estaba
+      const btnReady = document.getElementById('btn-lobby-ready');
+      if (btnReady && btnReady.textContent === 'Marcar como Listo') {
+        btnReady.click();
+      }
+    });
+  }
+
+  const modSelect = document.getElementById('lobby-module-select');
+        if (modSelect) {
+          modSelect.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
+          Object.values(MODULES).forEach(mod => {
+            modSelect.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
+          });
+          document.getElementById('lobby-module-host-view').style.display = 'block';
+          document.getElementById('lobby-module-client-view').style.display = 'none'; // El host usa el select
+        }
+
+        showView('lobby');
     }, (errorMsg) => {
       errEl.textContent = 'Error: ' + errorMsg;
     });
   });
 }
-  // === LÓGICA DEL LOBBY ===
+    // === LÓGICA DEL LOBBY ===
   const btnLobbyReady = document.getElementById('btn-lobby-ready');
   if (btnLobbyReady) {
     let isReady = false;
@@ -147,33 +246,70 @@ function setupMenuListeners() {
   if (btnLobbyStart) {
     btnLobbyStart.addEventListener('click', () => {
       if (MP.isHost) {
-        MP.broadcast({ type: 'start_game' });
-        showView('module');
-        renderModuleCards();
+        if (!GameState.selectedModule) {
+          alert('Por favor selecciona un módulo antes de continuar.');
+          return;
+        }
+        MP.broadcast({ type: 'start_character_creation' });
+        showView('character');
+        goToCharStep(1);
       }
     });
   }
 
-function renderModuleCards() {
-  const container = document.getElementById('module-cards');
-  if (!container) return;
-  container.innerHTML = '';
-  Object.values(MODULES).forEach(mod => {
-    const card = document.createElement('div');
-    card.className = 'module-card';
-    card.innerHTML = `
-      <div class="module-icon">${mod.icon}</div>
-      <h3>${mod.title}</h3>
-      <p class="module-tagline">${mod.tagline}</p>
-      <p class="module-desc">${mod.description.substring(0, 180)}...</p>
-      <button class="btn-primary btn-select-module" data-id="${mod.id}">Seleccionar</button>
-    `;
-    container.appendChild(card);
-  });
+    const btnLobbyPreset = document.getElementById('btn-lobby-preset');
+  if (btnLobbyPreset) {
+    btnLobbyPreset.addEventListener('click', () => {
+      // Perfiles aleatorios
+      const profiles = [
+        { name: "Elena", appearance: "30 años, chaqueta de cuero, mirada cansada", concept: "Mecánica que perdió todo", virtue: "Ingeniosa", vice: "Desconfiada", moment: "...logre encender el viejo generador y haya luz otra vez.", brink: "abandonar a alguien a su suerte", they: "moverse sin hacer ruido y apagar la luz con solo acercarse" },
+        { name: "Marcus", appearance: "50 años, traje gastado, anteojos rotos", concept: "Ex-profesor universitario arrepentido", virtue: "Sabio", vice: "Cobarde", moment: "...pueda perdonarme a mí mismo por lo que hice.", brink: "mentir para salvar el propio pellejo", they: "imitar las voces de las personas que amamos" },
+        { name: "Sarah", appearance: "19 años, mochila pesada, asustada pero alerta", concept: "Estudiante intentando encontrar a su familia", virtue: "Determinada", vice: "Impulsiva", moment: "...tenga la prueba de que mi hermana sigue viva.", brink: "robar lo poco que le queda a los demás", they: "aparecer solo cuando parpadeamos" },
+        { name: "David", appearance: "40 años, uniforme de paramédico rasgado", concept: "Paramédico exhausto", virtue: "Altruista", vice: "Adicto", moment: "...salve una vida aunque me cueste la mía.", brink: "usar la fuerza letal contra un humano", they: "absorber la luz y devolver el frío absoluto" }
+      ];
+      
+      const p = profiles[Math.floor(Math.random() * profiles.length)];
+      
+      // Llenar inputs visuales
+      document.getElementById('input-name').value = p.name;
+      document.getElementById('input-appearance').value = p.appearance;
+      document.getElementById('input-concept').value = p.concept;
+      document.getElementById('input-virtue').value = p.virtue;
+      document.getElementById('input-vice').value = p.vice;
+      document.getElementById('input-moment').value = p.moment;
+      document.getElementById('input-brink').value = p.brink;
+      document.getElementById('input-they').value = p.they;
+      
+      // Inventario por defecto
+      GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
+      
+      btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
+      btnLobbyPreset.style.background = 'var(--hope)';
+      btnLobbyPreset.style.color = '#000';
+      
+      // Auto-marcar como Listo si no lo estaba
+      const btnReady = document.getElementById('btn-lobby-ready');
+      if (btnReady && btnReady.textContent === 'Marcar como Listo') {
+        btnReady.click();
+      }
+    });
+  }
 
-  container.querySelectorAll('.btn-select-module').forEach(btn => {
-    btn.addEventListener('click', () => selectModule(btn.dataset.id));
-  });
+  const modSelect = document.getElementById('lobby-module-select');
+  if (modSelect) {
+    modSelect.addEventListener('change', (e) => {
+      const modId = e.target.value;
+      if (modId) {
+        GameState.selectedModule = MODULES[modId];
+        document.getElementById('lobby-module-name').textContent = GameState.selectedModule.title;
+        document.getElementById('lobby-module-desc').textContent = GameState.selectedModule.tagline;
+        
+        if (MP.isHost) {
+          MP.broadcast({ type: 'sync_module', modId: modId });
+        }
+      }
+    });
+  }
 }
 
 function selectModule(moduleId) {
@@ -247,11 +383,37 @@ function setupCharacterListeners() {
     if (input) input.value = '';
   });
 
-  document.getElementById('btn-start-game')?.addEventListener('click', async () => {
+    document.getElementById('btn-start-game')?.addEventListener('click', async () => {
     const msg = document.getElementById('input-final-message')?.value.trim();
-    if (!msg) return showError('Graba tu mensaje final antes de comenzar.');
+    if (!msg) return alert('Graba tu mensaje final antes de comenzar.');
     GameState.character.finalMessage = msg;
-    await startGame();
+    
+    const btnStart = document.getElementById('btn-start-game');
+    
+    if (MP.isClient) {
+      btnStart.textContent = 'Esperando al GM...';
+      btnStart.disabled = true;
+      MP.sendToHost({ type: 'sync_character', character: GameState.character });
+    } else {
+      // Host
+      if (MP.isHost) {
+        // Inicializar GameState.characters si no existe
+        if (!GameState.characters) GameState.characters = [];
+        // Actualizar o agregar el personaje del host
+        const idx = GameState.characters.findIndex(c => c.name === GameState.character.name);
+        if (idx >= 0) GameState.characters[idx] = GameState.character;
+        else GameState.characters.push(GameState.character);
+        
+        btnStart.textContent = 'Iniciando partida global...';
+        btnStart.disabled = true;
+        
+        MP.broadcast({ type: 'start_game' });
+        await startGame();
+      } else {
+        // Solitario
+        await startGame();
+      }
+    }
   });
 }
 
@@ -337,17 +499,30 @@ async function startGame() {
   renderCharacterSheet();
   renderInventoryList('game-inventory-list');
 
-  appendGMMessage('🕯️ *Las luces se apagan. Solo quedan las velas...*', false);
+  appendGMMessage('??? *Las luces se apagan. Solo quedan las velas...*', false);
   await sleep(1000);
 
-  setGMThinking(true);
-  try {
-    const opening = await GroqGM.openingNarration();
-    setGMThinking(false);
-    appendGMMessage(opening, true);
-  } catch (e) {
-    setGMThinking(false);
-    appendGMMessage(`⚠️ Error al conectar con el Game Master: ${e.message}`, false);
+  // Solo el Host o Jugador Solitario inician la narración
+  if (!MP.isClient) {
+    setGMThinking(true);
+    if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: true });
+    
+    try {
+      const opening = await GroqGM.openingNarration();
+      setGMThinking(false);
+      if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: false });
+      
+      appendGMMessage(opening, true);
+      if (MP.isHost) MP.broadcast({ type: 'chat_gm', msg: opening });
+      
+    } catch (e) {
+      setGMThinking(false);
+      if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: false });
+      appendGMMessage(`⚠️ Error al conectar con el Game Master: ${e.message}`, false);
+    }
+  } else {
+    // Si somos clientes, solo esperamos a que el Host nos mande la narración.
+    setGMThinking(true); // Se muestra pensando hasta que el Host mande el chat_gm
   }
 }
 
@@ -373,36 +548,59 @@ function setupGameListeners() {
   const btnCallGM = document.getElementById('btn-call-gm');
 
   if (btnPauseGM && btnCallGM) {
-    btnPauseGM.addEventListener('click', () => {
+        btnPauseGM.addEventListener('click', () => {
       gmPaused = true;
       btnPauseGM.style.display = 'none';
       btnCallGM.style.display = 'inline-block';
+      
+      if (MP.isClient) {
+        MP.sendToHost({ type: 'pause_gm' });
+      } else if (MP.isHost) {
+        MP.broadcast({ type: 'chat_system', msg: '🔇 **Modo Rol Libre activado.** El GM no interrumpirá.' });
+      }
+      
       appendGMMessage('🔇 **Modo Rol Libre activado.** El GM no interrumpirá. Hablen libremente. Presiona "Llamar al GM" cuando quieran que el mundo reaccione.', false);
     });
 
-    btnCallGM.addEventListener('click', async () => {
+        btnCallGM.addEventListener('click', async () => {
       gmPaused = false;
       btnCallGM.style.display = 'none';
       btnPauseGM.style.display = 'inline-block';
+
+      if (MP.isClient) {
+        // Enviar petición al host para que despause y reaccione
+        MP.sendToHost({ type: 'call_gm' });
+        return;
+      }
       
       if (queuedMessages > 0) {
         queuedMessages = 0;
         setGMThinking(true);
+        if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: true });
+
         try {
           const response = await GroqGM.ask("El grupo ha estado charlando o actuando entre ellos. Reacciona a toda la conversación anterior, avanza la trama y cede la palabra o pide tirada de dados si alguien intentó una acción de riesgo.");
           setGMThinking(false);
+          if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: false });
+          
           appendGMMessage(response, true);
+          if (MP.isHost) MP.broadcast({ type: 'chat_gm', msg: response });
+
           if (response.includes('[TIRADA DE DADOS REQUERIDA]')) {
             showRollPrompt("Acción del grupo");
+            if (MP.isHost) MP.broadcast({ type: 'roll_prompt', action: "Acción del grupo" });
           }
         } catch(e) {
           setGMThinking(false);
+          if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: false });
           appendGMMessage(`⚠️ Error: ${e.message}`, false);
         }
       } else {
         appendGMMessage('🔊 **El GM está de vuelta.** Esperando tu acción.', false);
+        if (MP.isHost) MP.broadcast({ type: 'chat_system', msg: '🔊 **El GM está de vuelta.** Esperando su acción.' });
       }
     });
+  });
   }
 
   // Tirar dados (deshabilitado por defecto)
@@ -1200,6 +1398,14 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
+
+
+
+
+
+
+
 
 
 

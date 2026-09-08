@@ -8,7 +8,7 @@ Los jugadores inevitablemente morirán al final de la sesión. Todos ellos.
 Estás narrando el módulo: "${GameState.selectedModule?.title || 'Desconocido'}"
 Objetivo del grupo: ${GameState.selectedModule?.objective || 'Sobrevivir un poco más.'}
 Contexto actual: ${GameState.buildContextSummary()}
-Naturaleza de Ellos (establecida por el jugador): "${GameState.character.theyBrink}"
+Naturaleza de Ellos (establecida por los jugadores): ver resumen de personajes
 
 === REGLAS ABSOLUTAS QUE DEBES SEGUIR ===
 1. ATMÓSFERA Y DESCRIPCIÓN: Describe vívidamente el entorno, olores, sombras y sonidos. Plantea situaciones misteriosas y obstáculos activamente.
@@ -18,11 +18,11 @@ Naturaleza de Ellos (establecida por el jugador): "${GameState.character.theyBri
    -> CORRECTO: "Metes la mano en el cajón a oscuras, pero escuchas pasos detrás de ti. [TIRADA DE DADOS REQUERIDA]"
    -> NUNCA entregues el premio o el castigo antes de la tirada. Siempre corta la narración en el clímax de la acción y escribe "[TIRADA DE DADOS REQUERIDA]".
 4. MEMORIA Y HERIDAS: Recuerda TODO lo ocurrido. Monitorea y menciona las heridas del personaje.
-5. MOMENTOS: El Momento del personaje es "${GameState.character.moment.text}". Guía la narrativa hacia él.
+5. MOMENTOS: Guía la narrativa hacia los Momentos activos de los personajes.
 6. VELAS: Con ${GameState.candlesLit} velas encendidas, el mundo es más oscuro.
 7. FASE FINAL: Si queda 1 vela, deja claro que el siguiente fallo será fatal.
 8. VERDADES: Cuando narres el inicio de una escena, incorpora las verdades.
-9. ELLOS: Manifiéstalos según: "${GameState.character.theyBrink}".
+9. ELLOS: Manifiéstalos según la Naturaleza que establecieron los jugadores.
 10. CONCISIÓN: Máximo 3-4 párrafos. Termina cediendo la palabra al jugador (o requiriendo tirada).
 11. NUNCA asumas o narres las acciones o decisiones del jugador. Tú controlas el mundo, él controla su personaje.
 
@@ -151,3 +151,5 @@ Devuelve SOLO las ${count} verdades separadas por un salto de línea, sin viñet
     return this.ask("FASE FINAL. El jugador ha fallado un conflicto estando en la última vela. Narra la MUERTE INEVITABLE del personaje de forma trágica y poética. Descríbelo consumido por la oscuridad o por Ellos. Esta es la narración final del juego.");
   }
 };
+
+
