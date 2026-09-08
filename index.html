@@ -1,0 +1,576 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ten Candles — Horror Trágico</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- PeerJS para Multijugador P2P -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VISTA: MENÚ PRINCIPAL
+════════════════════════════════════════════════════════════ -->
+<section id="view-menu" class="view active">
+  <div class="menu-content">
+    <div class="menu-logo">
+      <!-- Minivelas decorativas -->
+      <div class="menu-candles-row">
+        <span style="font-size:1.5rem;filter:drop-shadow(0 0 8px #d4821a)">🕯️</span>
+        <span style="font-size:1.5rem;filter:drop-shadow(0 0 8px #d4821a)">🕯️</span>
+        <span style="font-size:1.5rem;filter:drop-shadow(0 0 8px #d4821a)">🕯️</span>
+        <span style="font-size:1.5rem;filter:drop-shadow(0 0 8px #d4821a)">🕯️</span>
+        <span style="font-size:1.5rem;filter:drop-shadow(0 0 8px #d4821a)">🕯️</span>
+      </div>
+      <h1>TEN CANDLES</h1>
+      <p class="subtitle">Un juego de rol de horror trágico</p>
+    </div>
+
+    <div class="menu-buttons">
+      <button class="btn-primary" id="btn-solo">🕯️ Partida en Solitario</button>
+      <button class="btn-primary" id="btn-host" style="background:var(--bg2); border:1px solid var(--flame);">?? Crear Sala (Host)</button>
+      <button class="btn-primary" id="btn-join" style="background:var(--bg2); border:1px solid #555;">?? Unirse a Sala</button>
+      
+      <div id="api-key-section" style="display:none; margin-top:20px; text-align:left; background:var(--bg2); padding:15px; border-left:3px solid var(--flame);">
+        <h3 style="margin-top:0;">?? Clave API de Groq</h3>
+        <p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:10px;">Necesitas tu API Key para ser el Host o jugar solo. Se guarda solo en tu PC.</p>
+        <input type="password" id="input-api-key" placeholder="gsk_..." style="width:100%; margin-bottom:10px; padding:10px; font-family:monospace;" />
+        <button class="btn-primary" id="btn-save-key" style="width:100%; font-size:0.9rem;">Guardar y Empezar</button>
+      </div>
+      <button class="btn-secondary" onclick="showRules()">📖 Instrucciones rápidas</button>
+    </div>
+
+    <p style="margin-top:40px;color:var(--text-dark);font-size:0.8rem;font-style:italic;">
+      Basado en el juego de rol Ten Candles de Stephen Dewey · Cavalry Games
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VISTA: SELECCIÓN DE MÓDULO
+════════════════════════════════════════════════════════════ -->
+<section id="view-module" class="view">
+  <div style="width:100%;max-width:1020px;margin:0 auto;padding:40px 20px;">
+    <div class="section-header">
+      <h2>Elige tu Módulo</h2>
+      <p>El módulo establece el escenario de vuestra sesión. Elige el mundo en el que sobrevivirás.</p>
+    </div>
+    <div id="module-cards"></div>
+    <div style="text-align:center;margin-top:24px;">
+      <button class="btn-secondary" onclick="showView('menu')">← Volver al Menú</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VISTA: CREACIÓN DE PERSONAJE (7 pasos)
+════════════════════════════════════════════════════════════ -->
+<section id="view-character" class="view">
+  <div class="char-creation-container" style="padding:30px 20px;margin:0 auto;">
+    <!-- Indicador de pasos -->
+    <div class="step-indicator">
+      <div class="step-dot active" title="Paso 1: Rasgos"></div>
+      <div class="step-dot" title="Paso 2: Módulo"></div>
+      <div class="step-dot" title="Paso 3: Concepto"></div>
+      <div class="step-dot" title="Paso 4: Momento"></div>
+      <div class="step-dot" title="Paso 5: Tope"></div>
+      <div class="step-dot" title="Paso 6: Organizar pila"></div>
+      <div class="step-dot" title="Paso 7: Inventario"></div>
+    </div>
+
+    <!-- PASO 1: Rasgos -->
+    <div class="char-step active" id="char-step-1">
+      <div class="step-card">
+        <div class="step-number">Paso 1 de 7 · Enciende 3 velas</div>
+        <h3>🌟 Escribe tus Rasgos</h3>
+        <p>Cada personaje tiene dos Rasgos: una <strong>Virtud</strong> (algo positivo, que resuelve problemas) y un <strong>Vicio</strong> (algo negativo, que crea problemas). Usa una sola palabra o adjetivo.</p>
+
+        <div class="form-group">
+          <label>✨ Virtud (positiva)</label>
+          <input type="text" id="input-virtue" placeholder="Ej: Valiente, Ingenioso, Cariñoso, Astuto..." />
+          <span class="hint">Representa de qué te enorgulleces o qué te hace capaz.</span>
+        </div>
+        <div class="form-group">
+          <label>💀 Vicio (negativo)</label>
+          <input type="text" id="input-vice" placeholder="Ej: Ansioso, Codicioso, Impulsivo, Arrepentido..." />
+          <span class="hint">Algo con lo que luchas o que te causa problemas.</span>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-primary" id="btn-step1-next">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2: Módulo -->
+    <div class="char-step" id="char-step-2">
+      <div class="step-card">
+        <div class="step-number">Paso 2 de 7</div>
+        <h3>📜 El Módulo</h3>
+        <p>El Game Master lee la presentación del módulo. Escucha y familiarízate con el mundo en el que sobrevivirás.</p>
+        <div id="module-synopsis" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:16px;"></div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <button class="btn-secondary" id="btn-read-module">🔊 Escuchar con voz</button>
+        </div>
+        <div class="step-actions">
+          <button class="btn-secondary" onclick="goToCharStep(1)">← Atrás</button>
+          <button class="btn-primary" id="btn-step2-next">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 3: Concepto -->
+    <div class="char-step" id="char-step-3">
+      <div class="step-card">
+        <div class="step-number">Paso 3 de 7</div>
+        <h3>👤 Crea tu Concepto</h3>
+        <p>Define quién es tu personaje con tres datos básicos. No necesitas entrar en demasiados detalles: una instantánea es suficiente.</p>
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="input-name" placeholder="¿Cómo se llama tu personaje?" />
+        </div>
+        <div class="form-group">
+          <label>Aspecto</label>
+          <input type="text" id="input-appearance" placeholder="¿Cómo luce a primera vista? Edad, rasgos, ropa..." />
+        </div>
+        <div class="form-group">
+          <label>Concepto</label>
+          <textarea id="input-concept" placeholder="En pocas palabras, ¿quién es y qué hace? Ej: 'Enfermera de 34 años, pragmática, que perdió a su familia al inicio de la oscuridad.'"></textarea>
+        </div>
+        <div class="step-actions">
+          <button class="btn-secondary" onclick="goToCharStep(2)">← Atrás</button>
+          <button class="btn-primary" id="btn-step3-next">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 4: Momento -->
+    <div class="char-step" id="char-step-4">
+      <div class="step-card">
+        <div class="step-number">Paso 4 de 7 · Enciende 3 velas más</div>
+        <h3>💫 Planea tu Momento</h3>
+        <p>Tu Momento es un evento personal que <em>podría</em> suceder durante la sesión. Completa la frase:</p>
+        <div style="background:var(--bg2);border-left:3px solid var(--flame);padding:12px 16px;margin-bottom:16px;font-style:italic;color:var(--flame2);">
+          "Encontraré esperanza cuando..."
+        </div>
+        <div class="form-group">
+          <label>Tu Momento</label>
+          <textarea id="input-moment" placeholder="Ej: ...encuentre a mi hermana, viva o muerta. / ...uno de Ellos yace muerto a mis pies. / ...cierre la puerta del refugio por última vez."></textarea>
+          <span class="hint">Debe ser alcanzable durante la sesión, personal, y con posibilidad de fracasar.</span>
+        </div>
+        <div class="step-actions">
+          <button class="btn-secondary" onclick="goToCharStep(3)">← Atrás</button>
+          <button class="btn-primary" id="btn-step4-next">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 5: Tope y Ellos -->
+    <div class="char-step" id="char-step-5">
+      <div class="step-card">
+        <div class="step-number">Paso 5 de 7 · Enciende la última vela</div>
+        <h3>🔒 Descubre los Topes</h3>
+        <p>Tu <strong>Tope</strong> es un rasgo oscuro y secreto que solo emerge cuando todo lo demás se ha consumido. Escribe lo que eres capaz de hacer cuando eres llevado al límite.</p>
+        <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:12px;">Comienza con: <em>"Te he visto..."</em> — Nadie más lo sabrá hasta que se revele en el juego.</p>
+
+        <div class="form-group">
+          <label>🔒 Tu Tope (secreto)</label>
+          <input type="text" id="input-brink" placeholder="Te he visto... matar / traicionar / destruir / colapsar..." />
+          <span class="hint">Una frase corta. Ej: "Te he visto abandonar a los que amas para salvarte."</span>
+        </div>
+
+        <hr style="border-color:var(--border);margin:20px 0;">
+
+        <p>También debes escribir el Tope de <strong>Ellos</strong>: una única fuerza, poder o identidad que hayas visto en los antagonistas. Solo puedes establecer poderes, <em>nunca debilidades</em> (su única debilidad es la luz).</p>
+        <div style="background:var(--bg2);border-left:3px solid var(--danger);padding:12px 16px;margin-bottom:16px;font-style:italic;color:#ff9080;">
+          "Los he visto..."
+        </div>
+        <div class="form-group">
+          <label>👁️ El Tope de Ellos</label>
+          <textarea id="input-they" placeholder="Los he visto... moverse como sombras / poseer a los vivos / cambiar de forma / aúllar a la luna / consumir a los muertos..."></textarea>
+          <span class="hint">Esto define la naturaleza de los antagonistas para toda la sesión.</span>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" onclick="goToCharStep(4)">← Atrás</button>
+          <button class="btn-primary" id="btn-step5-next">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 6: Organizar Pila -->
+    <div class="char-step" id="char-step-6">
+      <div class="step-card">
+        <div class="step-number">Paso 6 de 7</div>
+        <h3>🃏 Organiza tu Pila</h3>
+        <p>Ordena tus cartas. Solo la carta en la <strong>cima</strong> está activa. El Tope siempre va al fondo (oculto). Usa los botones para reordenar.</p>
+        <p style="font-size:0.85rem;color:var(--text-dim);">Consejo: coloca el Momento en la cima para activarlo primero, o cambia el orden como prefieras.</p>
+
+        <div id="stack-display" class="stack-display"></div>
+
+        <div class="stack-arrows">
+          <button class="btn-secondary" id="stack-up" style="font-size:1.2rem;padding:6px 14px;">↑ Subir</button>
+          <button class="btn-secondary" id="stack-down" style="font-size:1.2rem;padding:6px 14px;">↓ Bajar</button>
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-dark);margin-top:8px;">Haz clic en una carta para seleccionarla, luego usa los botones para moverla.</p>
+
+        <div class="step-actions">
+          <button class="btn-secondary" onclick="goToCharStep(5)">← Atrás</button>
+          <button class="btn-primary" id="btn-step6-next">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 7: Inventario y Mensaje Final -->
+    <div class="char-step" id="char-step-7">
+      <div class="step-card">
+        <div class="step-number">Paso 7 de 7 · Apaga las luces</div>
+        <h3>🎒 Inventario y Mensaje Final</h3>
+        <p>Tu personaje tiene lo que lleva en los bolsillos. ¿Qué tienes contigo en este momento?</p>
+
+        <div class="form-group">
+          <label>Añadir objeto al inventario</label>
+          <div class="inventory-input-row">
+            <input type="text" id="input-item" placeholder="Ej: Linterna, navaja, radio, encendedor..." />
+            <button class="btn-secondary" id="btn-add-item">+ Añadir</button>
+          </div>
+          <ul id="char-inventory-list"></ul>
+        </div>
+
+        <hr style="border-color:var(--border);margin:20px 0;">
+
+        <p>Antes de comenzar, graba un <strong>mensaje final</strong>. Cualquier cosa que desees decirle al mundo que inevitablemente dejarás atrás. Se reproducirá al final del juego.</p>
+        <div class="form-group">
+          <label>🎙️ Mensaje Final (como tu personaje)</label>
+          <textarea id="input-final-message" placeholder="Escribe el mensaje que tu personaje dejaría grabado para cualquiera que lo encuentre..." style="min-height:120px;"></textarea>
+        </div>
+
+        <div class="step-actions" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <button class="btn-secondary" onclick="goToCharStep(6)">← Atrás</button>
+          <button class="btn-primary" id="btn-start-game" style="font-size:1.05rem;padding:12px 32px;">
+            🕯️ Comenzar la Partida
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VISTA: TABLERO DE JUEGO
+════════════════════════════════════════════════════════════ -->
+<section id="view-game" class="view">
+
+  <!-- HUD Superior -->
+  <div class="game-hud">
+    <div class="hud-item">
+      <span class="label">🕯️ VELAS</span>
+      <span class="value candles" id="hud-candles">10/10</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">ESCENA</span>
+      <span class="value" id="hud-scene">1</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">🎲 POOL</span>
+      <span class="value" id="hud-pool">10</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">GM DADOS</span>
+      <span class="value" id="hud-gm-pool">0</span>
+    </div>
+    <span class="hope-badge" id="hud-hope">🌟 Dado de Esperanza</span>
+    <span style="flex:1"></span>
+    <button class="btn-icon" id="btn-tts-toggle" title="Activar/Desactivar voz" style="font-size:1.2rem;">🔊</button>
+    <button class="btn-secondary" onclick="if(confirm('¿Volver al menú? Se perderá la partida.')) { GameState.reset(); showView(\'menu\'); }" style="font-size:0.8rem;padding:4px 12px;">✕ Salir</button>
+  </div>
+
+  <!-- Banner Fase Final -->
+  <div class="final-phase-banner" id="final-phase-banner">
+    ⚫ FASE FINAL — Los conflictos fallidos significan MUERTE ⚫
+  </div>
+
+  <!-- Layout principal -->
+  <div class="game-layout">
+
+    <!-- ── Panel Izquierdo: Ficha de Personaje ── -->
+    <div class="side-panel">
+
+      <div class="panel-section">
+        <h4>👤 Personaje</h4>
+        <div class="char-name-display" id="sheet-name">—</div>
+        <div class="char-concept-display" id="sheet-concept">—</div>
+      </div>
+
+      <div class="panel-section">
+        <h4>🃏 Rasgos</h4>
+
+        <!-- Virtud -->
+        <div class="trait-card inactive" id="trait-virtue">
+          <div class="trait-label">✨ Virtud</div>
+          <div class="trait-value" id="sheet-virtue">—</div>
+        </div>
+
+        <!-- Vicio -->
+        <div class="trait-card inactive" id="trait-vice">
+          <div class="trait-label">💀 Vicio</div>
+          <div class="trait-value" id="sheet-vice">—</div>
+        </div>
+
+        <!-- Momento -->
+        <div class="trait-card inactive" id="trait-moment">
+          <div class="trait-label">💫 Momento</div>
+          <div class="trait-value" id="sheet-moment" style="font-size:0.85rem;">—</div>
+        </div>
+
+        <!-- Tope -->
+        <div class="trait-card brink-card hidden-card" id="trait-brink">
+          <div class="trait-label">🔒 Tope</div>
+          <div class="trait-value" id="sheet-brink">???</div>
+        </div>
+      </div>
+
+      <!-- Dado de Esperanza -->
+      <div class="hope-die-indicator" id="hope-die-indicator">
+        🌟 Dado de Esperanza activo<br><small>Cuenta 5 o 6 como éxito</small>
+      </div>
+
+      <!-- Acciones de Rasgos -->
+      <div class="panel-section">
+        <h4>⚡ Acciones</h4>
+        <div class="trait-actions">
+          <button class="btn-danger" id="btn-burn-virtue" disabled>🔥 Quemar Virtud</button>
+          <button class="btn-danger" id="btn-burn-vice" disabled>🔥 Quemar Vicio</button>
+          <button class="btn-secondary" id="btn-live-moment" disabled style="border-color:var(--hope);color:var(--hope2);">💫 Vivir Momento</button>
+          <button class="btn-secondary" id="btn-embrace-brink" disabled style="border-color:#666;color:#999;">🔒 Abrazar Tope</button>
+        </div>
+      </div>
+
+      <!-- Estado de Salud -->
+      <div class="panel-section">
+        <h4>❤️ Estado / Heridas</h4>
+        <ul id="conditions-list"><li class="no-conditions">Sin heridas ni estados</li></ul>
+        <div class="condition-input-row" style="margin-top:8px;">
+          <input type="text" id="input-condition" placeholder="Nueva herida o estado..." />
+          <button class="btn-icon" id="btn-add-condition" style="font-size:1rem;color:var(--flame);">+</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Centro: Velas + Chat ── -->
+    <div class="game-center">
+
+      <!-- Círculo de velas -->
+      <div class="candles-area">
+        <div class="candles-area-title">Las Diez Velas</div>
+        <div id="candles-circle"></div>
+      </div>
+
+      <!-- Chat con el GM -->
+      <div class="chat-container">
+        <div id="chat-log"></div>
+
+        <!-- GM Thinking indicator -->
+        <div id="gm-thinking">
+          <span class="msg-icon">🕯️</span>
+          <span style="font-style:italic;color:var(--text-dim);">El Game Master narra</span>
+          <div class="thinking-dots"><span></span><span></span><span></span></div>
+        </div>
+
+        <!-- Input del jugador -->
+        <div class="chat-input-bar">
+          <button class="btn-icon" id="btn-mic" title="Hablar" style="font-size:1.5rem; padding: 4px; margin-right: 4px;">🎤</button>
+          <textarea id="chat-input" placeholder="Describe tu acción o habla como tu personaje... (Enter para enviar)" rows="1"></textarea>
+          <button class="btn-primary" id="btn-send" style="padding:10px 18px;min-width:80px;">Hablar</button>
+            <button class="btn-secondary" id="btn-pause-gm" title="Pausar al Master para rolear libremente entre jugadores sin que interrumpa" style="margin-left: 5px; padding:10px 10px; font-size:0.8rem;">?? Rol Libre</button>
+            <button class="btn-primary" id="btn-call-gm" title="Que el Master reaccione a todo lo hablado" style="margin-left: 5px; padding:10px 10px; font-size:0.8rem; display:none; background-color: var(--flame2);">?? Llamar al GM</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Panel Derecho: Dados e Inventario ── -->
+    <div class="side-panel-right">
+
+      <!-- Dados -->
+      <div class="panel-section">
+        <h4>🎲 Dados</h4>
+        <div class="dice-section">
+          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">Pool del Jugador</div>
+          <div id="dice-pool-visual" class="dice-pool-visual"></div>
+          <button class="btn-primary" id="btn-roll" style="width:100%;margin-top:10px;font-size:0.9rem;">
+            🎲 Tirar Dados
+          </button>
+        </div>
+        <div id="dice-result-area"></div>
+      </div>
+
+      <!-- Inventario -->
+      <div class="panel-section">
+        <h4>🎒 Inventario</h4>
+        <ul id="game-inventory-list"></ul>
+        <div class="inventory-input-row" style="margin-top:8px;">
+          <input type="text" id="input-inv-item" placeholder="Añadir objeto..." style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:3px;font-family:inherit;font-size:0.85rem;" />
+          <button class="btn-icon" id="btn-add-inv" style="font-size:1rem;color:var(--flame);">+</button>
+        </div>
+      </div>
+
+      <!-- Notas rápidas -->
+      <div class="panel-section">
+        <h4>📝 Notas</h4>
+        <textarea style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:4px;font-family:'Crimson Text',serif;font-size:0.85rem;resize:vertical;min-height:80px;" placeholder="Notas de la partida, verdades recordadas..."></textarea>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     VISTA: PANTALLA FINAL
+════════════════════════════════════════════════════════════ -->
+<section id="view-finale" class="view">
+  <div class="finale-content">
+    <div class="finale-ritual">Estas cosas son ciertas. El mundo está oscuro.</div>
+
+    <div class="finale-char" id="finale-char-name">—</div>
+    <div class="finale-module" id="finale-module">—</div>
+
+    <div id="finale-narration"></div>
+
+    <hr class="finale-separator">
+
+    <div class="finale-message-label">Mensaje Final</div>
+    <div id="finale-message"></div>
+
+    <div class="finale-actions">
+      <button class="btn-secondary" onclick="GameState.reset(); showView('menu');" style="font-size:0.9rem;">
+        Volver al Menú
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: FASE DE VERDADES
+════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modal-truth">
+  <div class="modal-box" style="max-width:620px;">
+    <h3>🕯️ Fase de Verdades</h3>
+    <div id="truth-intro">Estas cosas son ciertas. El mundo está oscuro.</div>
+    <div id="truth-content"></div>
+    <button class="btn-primary" id="btn-truth-final" style="display:none;">
+      🕯️ "Y estamos vivos." — Comenzar nueva escena
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: TIRADA DE DADOS
+════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modal-dice">
+  <div class="modal-box" style="max-width:480px;">
+    <h3>🎲 Tirada de Conflicto</h3>
+    <div id="roll-action-text"></div>
+    <div id="dice-result-area-modal"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="hideModal('dice')">Cancelar</button>
+      <button class="btn-primary" onclick="rollDice()">🎲 Tirar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: INSTRUCCIONES
+════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modal-rules">
+  <div class="modal-box" style="max-width:640px;">
+    <h3>📖 Instrucciones Rápidas</h3>
+    <div style="color:var(--text-dim);font-size:0.95rem;line-height:1.7;">
+      <p><strong style="color:var(--flame2);">Objetivo:</strong> Contar una historia de horror trágico. Todos los personajes morirán — lo importante es cómo.</p>
+      <br>
+      <p><strong style="color:var(--flame2);">🕯️ Velas:</strong> 10 velas encendidas. Cada vez que un conflicto falla, se apaga una. Con menos velas, el mundo es más oscuro y peligroso.</p>
+      <br>
+      <p><strong style="color:var(--flame2);">🎲 Dados:</strong> Pool de dados = número de velas encendidas. Tira para superar conflictos. <strong>Al menos un 6 = éxito</strong>. Los dados que salen 1 se pierden del pool si el conflicto tiene éxito.</p>
+      <br>
+      <p><strong style="color:var(--flame2);">🃏 Rasgos:</strong> Solo la carta en la cima de tu pila está activa. Puedes quemar un rasgo activo por escena para re-tirar todos tus 1s.</p>
+      <br>
+      <p><strong style="color:var(--flame2);">💫 Momento:</strong> Si logras vivir tu Momento, ganas un Dado de Esperanza (cuenta 5 o 6, no se pierde si sale 1).</p>
+      <br>
+      <p><strong style="color:var(--flame2);">🔒 Tope:</strong> Solo se activa cuando Virtud, Vicio y Momento están quemados. Re-tira todo el pool. Si fallas, se quema, pierdes el dado de esperanza y una vela se apaga.</p>
+      <br>
+      <p><strong style="color:var(--flame2);">⚫ Fase Final (1 vela):</strong> Los conflictos fallidos ya no apagan velas — matan a tu personaje.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="hideModal('rules')">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de errores -->
+<div id="error-toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════════════════ -->
+<script src="js/config.js?v=6"></script>
+<script src="js/modules.js?v=6"></script>
+<script src="js/gameState.js?v=6"></script>
+<script src="js/dice.js?v=6"></script>
+<script src="js/tts.js?v=6"></script>
+<script src="js/ai.js?v=6"></script>
+<script src="js/multiplayer.js?v=6"></script>
+<script src="js/main.js?v=6"></script>
+
+<script>
+  function showRules() { showModal('rules'); }
+</script>
+<script>
+// Auto-resize del textarea de chat
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('chat-input');
+  if (ta) {
+    ta.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+  }
+});
+</script>
+<div class="modal" id="modal-join" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+  <div class="modal-box" style="max-width:400px;">
+    <h3>Entrar a la Sala</h3>
+    <div class="form-group">
+      <label>Tu Nombre</label>
+      <input type="text" id="input-join-name" placeholder="Ej: Frank" />
+    </div>
+    <div class="form-group">
+      <label>Código de la Sala (4 letras)</label>
+      <input type="text" id="input-join-code" placeholder="Ej: X7B2" style="text-transform:uppercase;" maxlength="4" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="document.getElementById('modal-join').style.display='none'">Cancelar</button>
+      <button class="btn-primary" id="btn-confirm-join">Conectar</button>
+    </div>
+    <div id="join-error" style="color:red; margin-top:10px; font-size:0.9rem;"></div>
+  </div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
