@@ -1,4 +1,4 @@
-﻿// js/main.js — Orquestador principal de Ten Candles
+// js/main.js — Orquestador principal de Ten Candles
 
 // ═══════════════════════════════════════════════════════════════
 //  VARIABLES GLOBALES DE UI
@@ -117,18 +117,6 @@ function setupMenuListeners() {
     }, (errorMsg) => {
       errEl.textContent = 'Error: ' + errorMsg;
     });
-  });
-});
-
-  document.getElementById('btn-host')?.addEventListener('click', () => {
-    checkApiKey(() => {
-      alert("¡Listo! Tu API Key está guardada. El modo multijugador está en desarrollo y se implementará pronto.");
-    });
-  });
-  
-  document.getElementById('btn-join')?.addEventListener('click', () => {
-    // Los jugadores que se unen no necesitan API Key, usan la del Host.
-    alert("El modo multijugador está en desarrollo y se implementará pronto.");
   });
 }
 
