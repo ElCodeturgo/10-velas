@@ -1,4 +1,4 @@
-// js/main.js — Orquestador principal de Ten Candles
+﻿// js/main.js — Orquestador principal de Ten Candles
 
 // ═══════════════════════════════════════════════════════════════
 //  VARIABLES GLOBALES DE UI
@@ -65,24 +65,32 @@ function setupMenuListeners() {
   document.getElementById('btn-solo')?.addEventListener('click', () => {
     checkApiKey(() => {
       GameState.reset();
-      document.getElementById('lobby-container').style.display = 'none';
       showView('module');
       renderModuleCards();
     });
   });
 
-  document.getElementById('btn-host')?.addEventListener('click', () => {
+  document.getElementById('btn-host')?.addEventListener('click', (e) => {
     checkApiKey(() => {
       GameState.reset();
-      document.getElementById('lobby-container').innerHTML = '<h2 style="text-align:center;color:white;">Iniciando servidor Host...</h2>';
+      const btn = e.target;
+      const oldText = btn.textContent;
+      btn.textContent = 'Iniciando servidor...';
+      btn.disabled = true;
       
       MP.initHost((roomCode) => {
-        document.getElementById('lobby-container').style.display = 'none';
+        btn.textContent = oldText;
+        btn.disabled = false;
+        
         document.getElementById('room-banner').style.display = 'block';
         document.getElementById('room-code-display').textContent = roomCode;
         
         showView('module');
         renderModuleCards();
+      }, (err) => {
+        btn.textContent = oldText;
+        btn.disabled = false;
+        alert("Error al iniciar el Host: " + err);
       });
     });
   });
@@ -104,14 +112,10 @@ function setupMenuListeners() {
     errEl.textContent = 'Conectando...';
     
     MP.initClient(code, name, () => {
-      // Conexión exitosa
       document.getElementById('modal-join').style.display = 'none';
-      document.getElementById('lobby-container').style.display = 'none';
-      
-      // Mostrar directamente la pantalla de juego (el Host controla el módulo y creación)
-      // Por ahora, lo mandamos a la creación de personaje de forma individual
+      const viewMenu = document.getElementById('view-menu');
+      if (viewMenu) viewMenu.classList.remove('active');
       document.getElementById('character-creation-container').style.display = 'block';
-      
       document.getElementById('room-banner').style.display = 'block';
       document.getElementById('room-code-display').textContent = 'CONECTADO A: ' + code.toUpperCase();
     }, (errorMsg) => {
@@ -1166,6 +1170,8 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
+
 
 
 

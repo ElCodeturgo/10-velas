@@ -9,14 +9,25 @@ const MP = {
   playerName: 'Jugador',
   roomCode: '',
 
-  initHost: function(onReady) {
+    initHost: function(onReady, onError) {
     this.isHost = true;
     this.roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-    this.peer = new Peer('tencandles-' + this.roomCode);
+    
+    try {
+      this.peer = new Peer('tencandles-' + this.roomCode);
+    } catch(e) {
+      if(onError) onError("No se pudo iniciar PeerJS: " + e.message);
+      return;
+    }
 
     this.peer.on('open', (id) => {
       console.log('Host creado con ID:', id);
       onReady(this.roomCode);
+    });
+
+    this.peer.on('error', (err) => {
+      console.error('Peer error:', err);
+      if(onError) onError(err.message);
     });
 
     this.peer.on('connection', (conn) => {
@@ -171,3 +182,4 @@ const MP = {
     }
   }
 };
+
