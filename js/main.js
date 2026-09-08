@@ -78,61 +78,23 @@ function setupMenuListeners() {
       btn.textContent = 'Iniciando servidor...';
       btn.disabled = true;
       
-            MP.initHost((roomCode) => {
+      MP.initHost((roomCode) => {
         btn.textContent = oldText;
         btn.disabled = false;
         
-                document.getElementById('room-banner').style.display = 'block';
+        document.getElementById('room-banner').style.display = 'block';
         document.getElementById('room-code-display').textContent = roomCode;
         document.getElementById('lobby-code').textContent = roomCode;
         
         // Setup Module Select for Host
-          const btnLobbyPreset = document.getElementById('btn-lobby-preset');
-  if (btnLobbyPreset) {
-    btnLobbyPreset.addEventListener('click', () => {
-      // Perfiles aleatorios
-      const profiles = [
-        { name: "Elena", appearance: "30 años, chaqueta de cuero, mirada cansada", concept: "Mecánica que perdió todo", virtue: "Ingeniosa", vice: "Desconfiada", moment: "...logre encender el viejo generador y haya luz otra vez.", brink: "abandonar a alguien a su suerte", they: "moverse sin hacer ruido y apagar la luz con solo acercarse" },
-        { name: "Marcus", appearance: "50 años, traje gastado, anteojos rotos", concept: "Ex-profesor universitario arrepentido", virtue: "Sabio", vice: "Cobarde", moment: "...pueda perdonarme a mí mismo por lo que hice.", brink: "mentir para salvar el propio pellejo", they: "imitar las voces de las personas que amamos" },
-        { name: "Sarah", appearance: "19 años, mochila pesada, asustada pero alerta", concept: "Estudiante intentando encontrar a su familia", virtue: "Determinada", vice: "Impulsiva", moment: "...tenga la prueba de que mi hermana sigue viva.", brink: "robar lo poco que le queda a los demás", they: "aparecer solo cuando parpadeamos" },
-        { name: "David", appearance: "40 años, uniforme de paramédico rasgado", concept: "Paramédico exhausto", virtue: "Altruista", vice: "Adicto", moment: "...salve una vida aunque me cueste la mía.", brink: "usar la fuerza letal contra un humano", they: "absorber la luz y devolver el frío absoluto" }
-      ];
-      
-      const p = profiles[Math.floor(Math.random() * profiles.length)];
-      
-      // Llenar inputs visuales
-      document.getElementById('input-name').value = p.name;
-      document.getElementById('input-appearance').value = p.appearance;
-      document.getElementById('input-concept').value = p.concept;
-      document.getElementById('input-virtue').value = p.virtue;
-      document.getElementById('input-vice').value = p.vice;
-      document.getElementById('input-moment').value = p.moment;
-      document.getElementById('input-brink').value = p.brink;
-      document.getElementById('input-they').value = p.they;
-      
-      // Inventario por defecto
-      GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
-      
-      btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
-      btnLobbyPreset.style.background = 'var(--hope)';
-      btnLobbyPreset.style.color = '#000';
-      
-      // Auto-marcar como Listo si no lo estaba
-      const btnReady = document.getElementById('btn-lobby-ready');
-      if (btnReady && btnReady.textContent === 'Marcar como Listo') {
-        btnReady.click();
-      }
-    });
-  }
-
-  const modSelect = document.getElementById('lobby-module-select');
-        if (modSelect) {
-          modSelect.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
+        const modSelectUI = document.getElementById('lobby-module-select');
+        if (modSelectUI) {
+          modSelectUI.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
           Object.values(MODULES).forEach(mod => {
-            modSelect.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
+            modSelectUI.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
           });
           document.getElementById('lobby-module-host-view').style.display = 'block';
-          document.getElementById('lobby-module-client-view').style.display = 'none'; // El host usa el select
+          document.getElementById('lobby-module-client-view').style.display = 'none';
         }
 
         showView('lobby');
@@ -160,68 +122,18 @@ function setupMenuListeners() {
     
     errEl.textContent = 'Conectando...';
     
-        MP.initClient(code, name, () => {
+    MP.initClient(code, name, () => {
       document.getElementById('modal-join').style.display = 'none';
-              document.getElementById('room-banner').style.display = 'block';
-        document.getElementById('room-code-display').textContent = roomCode;
-        document.getElementById('lobby-code').textContent = roomCode;
-        
-        // Setup Module Select for Host
-          const btnLobbyPreset = document.getElementById('btn-lobby-preset');
-  if (btnLobbyPreset) {
-    btnLobbyPreset.addEventListener('click', () => {
-      // Perfiles aleatorios
-      const profiles = [
-        { name: "Elena", appearance: "30 años, chaqueta de cuero, mirada cansada", concept: "Mecánica que perdió todo", virtue: "Ingeniosa", vice: "Desconfiada", moment: "...logre encender el viejo generador y haya luz otra vez.", brink: "abandonar a alguien a su suerte", they: "moverse sin hacer ruido y apagar la luz con solo acercarse" },
-        { name: "Marcus", appearance: "50 años, traje gastado, anteojos rotos", concept: "Ex-profesor universitario arrepentido", virtue: "Sabio", vice: "Cobarde", moment: "...pueda perdonarme a mí mismo por lo que hice.", brink: "mentir para salvar el propio pellejo", they: "imitar las voces de las personas que amamos" },
-        { name: "Sarah", appearance: "19 años, mochila pesada, asustada pero alerta", concept: "Estudiante intentando encontrar a su familia", virtue: "Determinada", vice: "Impulsiva", moment: "...tenga la prueba de que mi hermana sigue viva.", brink: "robar lo poco que le queda a los demás", they: "aparecer solo cuando parpadeamos" },
-        { name: "David", appearance: "40 años, uniforme de paramédico rasgado", concept: "Paramédico exhausto", virtue: "Altruista", vice: "Adicto", moment: "...salve una vida aunque me cueste la mía.", brink: "usar la fuerza letal contra un humano", they: "absorber la luz y devolver el frío absoluto" }
-      ];
-      
-      const p = profiles[Math.floor(Math.random() * profiles.length)];
-      
-      // Llenar inputs visuales
-      document.getElementById('input-name').value = p.name;
-      document.getElementById('input-appearance').value = p.appearance;
-      document.getElementById('input-concept').value = p.concept;
-      document.getElementById('input-virtue').value = p.virtue;
-      document.getElementById('input-vice').value = p.vice;
-      document.getElementById('input-moment').value = p.moment;
-      document.getElementById('input-brink').value = p.brink;
-      document.getElementById('input-they').value = p.they;
-      
-      // Inventario por defecto
-      GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
-      
-      btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
-      btnLobbyPreset.style.background = 'var(--hope)';
-      btnLobbyPreset.style.color = '#000';
-      
-      // Auto-marcar como Listo si no lo estaba
-      const btnReady = document.getElementById('btn-lobby-ready');
-      if (btnReady && btnReady.textContent === 'Marcar como Listo') {
-        btnReady.click();
-      }
-    });
-  }
-
-  const modSelect = document.getElementById('lobby-module-select');
-        if (modSelect) {
-          modSelect.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
-          Object.values(MODULES).forEach(mod => {
-            modSelect.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
-          });
-          document.getElementById('lobby-module-host-view').style.display = 'block';
-          document.getElementById('lobby-module-client-view').style.display = 'none'; // El host usa el select
-        }
-
-        showView('lobby');
+      document.getElementById('room-banner').style.display = 'block';
+      document.getElementById('room-code-display').textContent = 'CONECTADO A: ' + code.toUpperCase();
+      document.getElementById('lobby-code').textContent = code.toUpperCase();
+      showView('lobby');
     }, (errorMsg) => {
       errEl.textContent = 'Error: ' + errorMsg;
     });
   });
-}
-    // === LÓGICA DEL LOBBY ===
+
+  // === LÓGICA DEL LOBBY ===
   const btnLobbyReady = document.getElementById('btn-lobby-ready');
   if (btnLobbyReady) {
     let isReady = false;
@@ -257,20 +169,17 @@ function setupMenuListeners() {
     });
   }
 
-    const btnLobbyPreset = document.getElementById('btn-lobby-preset');
+  const btnLobbyPreset = document.getElementById('btn-lobby-preset');
   if (btnLobbyPreset) {
     btnLobbyPreset.addEventListener('click', () => {
-      // Perfiles aleatorios
       const profiles = [
         { name: "Elena", appearance: "30 años, chaqueta de cuero, mirada cansada", concept: "Mecánica que perdió todo", virtue: "Ingeniosa", vice: "Desconfiada", moment: "...logre encender el viejo generador y haya luz otra vez.", brink: "abandonar a alguien a su suerte", they: "moverse sin hacer ruido y apagar la luz con solo acercarse" },
         { name: "Marcus", appearance: "50 años, traje gastado, anteojos rotos", concept: "Ex-profesor universitario arrepentido", virtue: "Sabio", vice: "Cobarde", moment: "...pueda perdonarme a mí mismo por lo que hice.", brink: "mentir para salvar el propio pellejo", they: "imitar las voces de las personas que amamos" },
         { name: "Sarah", appearance: "19 años, mochila pesada, asustada pero alerta", concept: "Estudiante intentando encontrar a su familia", virtue: "Determinada", vice: "Impulsiva", moment: "...tenga la prueba de que mi hermana sigue viva.", brink: "robar lo poco que le queda a los demás", they: "aparecer solo cuando parpadeamos" },
         { name: "David", appearance: "40 años, uniforme de paramédico rasgado", concept: "Paramédico exhausto", virtue: "Altruista", vice: "Adicto", moment: "...salve una vida aunque me cueste la mía.", brink: "usar la fuerza letal contra un humano", they: "absorber la luz y devolver el frío absoluto" }
       ];
-      
       const p = profiles[Math.floor(Math.random() * profiles.length)];
       
-      // Llenar inputs visuales
       document.getElementById('input-name').value = p.name;
       document.getElementById('input-appearance').value = p.appearance;
       document.getElementById('input-concept').value = p.concept;
@@ -280,14 +189,12 @@ function setupMenuListeners() {
       document.getElementById('input-brink').value = p.brink;
       document.getElementById('input-they').value = p.they;
       
-      // Inventario por defecto
       GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
       
       btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
       btnLobbyPreset.style.background = 'var(--hope)';
       btnLobbyPreset.style.color = '#000';
       
-      // Auto-marcar como Listo si no lo estaba
       const btnReady = document.getElementById('btn-lobby-ready');
       if (btnReady && btnReady.textContent === 'Marcar como Listo') {
         btnReady.click();
@@ -295,9 +202,9 @@ function setupMenuListeners() {
     });
   }
 
-  const modSelect = document.getElementById('lobby-module-select');
-  if (modSelect) {
-    modSelect.addEventListener('change', (e) => {
+  const modSelectEvent = document.getElementById('lobby-module-select');
+  if (modSelectEvent) {
+    modSelectEvent.addEventListener('change', (e) => {
       const modId = e.target.value;
       if (modId) {
         GameState.selectedModule = MODULES[modId];
@@ -1398,6 +1305,7 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
 
 
 
