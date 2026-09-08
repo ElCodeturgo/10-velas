@@ -79,7 +79,7 @@
     <button class="btn-primary" id="btn-lobby-preset" style="background:#555; border:1px solid #777; padding:10px 15px; margin-right:10px;" title="Generar un personaje aleatorio para no tener que llenar los datos a mano">⚡ Personaje Aleatorio</button>
     <button class="btn-secondary" id="btn-lobby-ready" style="border-color:var(--hope); color:var(--hope2); padding:10px 30px;">Marcar como Listo</button>
     <br>
-    <button class="btn-primary" id="btn-lobby-start" style="display:none; margin-top:15px; padding:10px 30px; width: 100%; max-width: 500px;">Ir a Crear Personajes</button>
+    <button class="btn-primary" id="btn-lobby-start" style="display:none; margin-top:15px; padding:10px 30px; width: 100%; max-width: 500px;">Ir a Crear Personajes</button>`n    <button class="btn-secondary" id="btn-lobby-load" style="display:none; margin-top:10px; padding:10px 30px; width: 100%; max-width: 500px; border-color: var(--flame); color: var(--flame);">💾 Cargar Sesión Guardada</button>
   </div>
 </section>
 
@@ -313,7 +313,7 @@
       <span class="label">GM DADOS</span>
       <span class="value" id="hud-gm-pool">0</span>
     </div>
-    <span class="hope-badge" id="hud-hope">🌟 Dado de Esperanza</span>
+    <span class="hope-badge" id="hud-hope">🌟 Dado de Esperanza</span>`n    <button class="btn-icon" id="btn-save-game" title="Guardar Partida (Host)" style="display:none; margin-left:auto; font-size:1.5rem;">💾</button>
     <span style="flex:1"></span>
     <button class="btn-icon" id="btn-tts-toggle" title="Activar/Desactivar voz" style="font-size:1.2rem;">🔊</button>
     <button class="btn-secondary" onclick="if(confirm('¿Volver al menú? Se perderá la partida.')) { GameState.reset(); showView(\'menu\'); }" style="font-size:0.8rem;padding:4px 12px;">✕ Salir</button>
@@ -548,14 +548,14 @@
 <!-- ═══════════════════════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════════════════════ -->
-<script src="js/config.js?v=14"></script>
-<script src="js/modules.js?v=14"></script>
-<script src="js/gameState.js?v=14"></script>
-<script src="js/dice.js?v=14"></script>
-<script src="js/tts.js?v=14"></script>
-<script src="js/ai.js?v=14"></script>
-<script src="js/multiplayer.js?v=14"></script>
-<script src="js/main.js?v=14"></script>
+<script src="js/config.js?v=15"></script>
+<script src="js/modules.js?v=15"></script>
+<script src="js/gameState.js?v=15"></script>
+<script src="js/dice.js?v=15"></script>
+<script src="js/tts.js?v=15"></script>
+<script src="js/ai.js?v=15"></script>
+<script src="js/multiplayer.js?v=15"></script>
+<script src="js/main.js?v=15"></script>
 
 <script>
   function showRules() { showModal('rules'); }
@@ -592,6 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 </body>
 </html>
+
+
 
 
 

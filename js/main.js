@@ -88,13 +88,19 @@ function setupMenuListeners() {
         
         // Setup Module Select for Host
         const modSelectUI = document.getElementById('lobby-module-select');
-        if (modSelectUI) {
+                if (modSelectUI) {
           modSelectUI.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
           Object.values(MODULES).forEach(mod => {
             modSelectUI.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
           });
           document.getElementById('lobby-module-host-view').style.display = 'block';
           document.getElementById('lobby-module-client-view').style.display = 'none';
+        }
+        
+        const saved = localStorage.getItem('tencandles_save');
+        const btnLoad = document.getElementById('btn-lobby-load');
+        if (saved && btnLoad) {
+           btnLoad.style.display = 'inline-block';
         }
 
         showView('lobby');
@@ -133,7 +139,47 @@ function setupMenuListeners() {
     });
   });
 
-  // === LÓGICA DEL LOBBY ===
+  // === SISTEMA DE GUARDADO ===
+async function restoreGameUI() {
+  showView('game');
+  initCandleUI();
+  updateGameHUD();
+  renderCharacterSheet();
+  renderInventoryList('game-inventory-list');
+  
+  if (!MP.isClient) {
+    const btnSave = document.getElementById('btn-save-game');
+    if (btnSave) btnSave.style.display = 'inline-block';
+  }
+
+  const log = document.getElementById('chat-log');
+  if (log) log.innerHTML = '';
+  
+  for (const msg of GameState.history) {
+    if (msg.role === 'user') {
+      appendPlayerMessage(msg.text);
+    } else if (msg.role === 'model' && !msg.text.startsWith('[Nota de Sistema')) {
+      appendGMMessage(msg.text, false);
+    }
+  }
+  appendGMMessage('💾 **Partida restaurada con éxito.**', false);
+}
+
+document.getElementById('btn-save-game')?.addEventListener('click', () => {
+  if (MP.isHost || (!MP.isHost && !MP.isClient)) {
+    try {
+      localStorage.setItem('tencandles_save', JSON.stringify(GameState));
+      appendGMMessage('💾 **Partida guardada localmente.**', false);
+      if (MP.isHost) {
+        MP.broadcast({ type: 'chat_system', msg: '💾 **El Host ha guardado la partida.**' });
+      }
+    } catch (e) {
+      alert("Error al guardar: " + e.message);
+    }
+  }
+});
+
+// === LÓGICA DEL LOBBY ===
   const btnLobbyReady = document.getElementById('btn-lobby-ready');
   if (btnLobbyReady) {
     let isReady = false;
@@ -150,6 +196,25 @@ function setupMenuListeners() {
         MP.updateLobbyUI();
       } else {
         MP.sendToHost({ type: 'set_ready', ready: isReady });
+      }
+    });
+  }
+
+    const btnLobbyLoad = document.getElementById('btn-lobby-load');
+  if (btnLobbyLoad) {
+    btnLobbyLoad.addEventListener('click', () => {
+      if (MP.isHost) {
+        const saved = localStorage.getItem('tencandles_save');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            Object.assign(GameState, parsed);
+            MP.broadcast({ type: 'load_game', state: GameState });
+            restoreGameUI();
+          } catch(e) {
+            alert('No se pudo cargar la partida: ' + e.message);
+          }
+        }
       }
     });
   }
@@ -409,8 +474,11 @@ async function startGame() {
   appendGMMessage('??? *Las luces se apagan. Solo quedan las velas...*', false);
   await sleep(1000);
 
-  // Solo el Host o Jugador Solitario inician la narración
+    // Solo el Host o Jugador Solitario inician la narración
   if (!MP.isClient) {
+    const btnSave = document.getElementById('btn-save-game');
+    if (btnSave) btnSave.style.display = 'inline-block';
+
     setGMThinking(true);
     if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: true });
     
@@ -1304,6 +1372,9 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
+
+
 
 
 

@@ -191,6 +191,18 @@ const MP = {
       if (nameEl) nameEl.textContent = GameState.selectedModule.title;
       if (descEl) descEl.textContent = GameState.selectedModule.tagline;
     }
+        else if (data.type === 'load_game') {
+      Object.assign(GameState, data.state);
+      
+      const myChar = GameState.characters?.find(c => c.name === MP.playerName);
+      if (myChar) {
+         GameState.character = myChar;
+      }
+      
+      if (typeof restoreGameUI === 'function') {
+        restoreGameUI();
+      }
+    }
     else if (data.type === 'sync_state') {
       GameState.candlesLit = data.candlesLit;
       updateCandlesVisual();
@@ -269,6 +281,7 @@ const MP = {
     }
   }
 };
+
 
 
 
