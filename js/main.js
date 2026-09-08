@@ -78,15 +78,15 @@ function setupMenuListeners() {
       btn.textContent = 'Iniciando servidor...';
       btn.disabled = true;
       
-      MP.initHost((roomCode) => {
+            MP.initHost((roomCode) => {
         btn.textContent = oldText;
         btn.disabled = false;
         
         document.getElementById('room-banner').style.display = 'block';
         document.getElementById('room-code-display').textContent = roomCode;
+        document.getElementById('lobby-code').textContent = roomCode;
         
-        showView('module');
-        renderModuleCards();
+        showView('lobby');
       }, (err) => {
         btn.textContent = oldText;
         btn.disabled = false;
@@ -111,18 +111,48 @@ function setupMenuListeners() {
     
     errEl.textContent = 'Conectando...';
     
-    MP.initClient(code, name, () => {
+        MP.initClient(code, name, () => {
       document.getElementById('modal-join').style.display = 'none';
-      const viewMenu = document.getElementById('view-menu');
-      if (viewMenu) viewMenu.classList.remove('active');
-      document.getElementById('character-creation-container').style.display = 'block';
       document.getElementById('room-banner').style.display = 'block';
       document.getElementById('room-code-display').textContent = 'CONECTADO A: ' + code.toUpperCase();
+      document.getElementById('lobby-code').textContent = code.toUpperCase();
+      showView('lobby');
     }, (errorMsg) => {
       errEl.textContent = 'Error: ' + errorMsg;
     });
   });
 }
+  // === LÓGICA DEL LOBBY ===
+  const btnLobbyReady = document.getElementById('btn-lobby-ready');
+  if (btnLobbyReady) {
+    let isReady = false;
+    btnLobbyReady.addEventListener('click', () => {
+      isReady = !isReady;
+      btnLobbyReady.textContent = isReady ? 'Desmarcar Listo' : 'Marcar como Listo';
+      btnLobbyReady.style.borderColor = isReady ? 'gray' : 'var(--hope)';
+      btnLobbyReady.style.color = isReady ? 'gray' : 'var(--hope2)';
+      
+      if (MP.isHost) {
+        const p = MP.lobbyPlayers.find(p => p.id === 'host');
+        if (p) p.ready = isReady;
+        MP.broadcast({ type: 'lobby_update', players: MP.lobbyPlayers });
+        MP.updateLobbyUI();
+      } else {
+        MP.sendToHost({ type: 'set_ready', ready: isReady });
+      }
+    });
+  }
+
+  const btnLobbyStart = document.getElementById('btn-lobby-start');
+  if (btnLobbyStart) {
+    btnLobbyStart.addEventListener('click', () => {
+      if (MP.isHost) {
+        MP.broadcast({ type: 'start_game' });
+        showView('module');
+        renderModuleCards();
+      }
+    });
+  }
 
 function renderModuleCards() {
   const container = document.getElementById('module-cards');
@@ -1170,6 +1200,8 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
+
 
 
 

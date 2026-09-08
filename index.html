@@ -52,6 +52,24 @@
 <!-- ═══════════════════════════════════════════════════════════
      VISTA: SELECCIÓN DE MÓDULO
 ════════════════════════════════════════════════════════════ -->
+<!-- VISTA: LOBBY DE ESPERA -->
+<section id="view-lobby" class="view" style="text-align:center; padding:40px 20px;">
+  <h2 style="color:white;">Sala de Espera</h2>
+  <p style="color:var(--flame); font-size:1.5rem; letter-spacing:3px;">Código: <strong id="lobby-code">----</strong></p>
+  
+  <div class="step-card" style="max-width:500px; margin:20px auto; text-align:left;">
+    <h3>Jugadores Conectados</h3>
+    <ul id="lobby-players-list" style="list-style:none; padding:0; font-size:1.1rem;">
+      <!-- Se llenará dinámicamente -->
+    </ul>
+  </div>
+
+  <div style="margin-top:20px;">
+    <button class="btn-secondary" id="btn-lobby-ready" style="border-color:var(--hope); color:var(--hope2); padding:10px 30px;">Marcar como Listo</button>
+    <button class="btn-primary" id="btn-lobby-start" style="display:none; margin-top:15px; padding:10px 30px; width: 100%; max-width: 500px;">Seleccionar Módulo y Empezar</button>
+  </div>
+</section>
+
 <section id="view-module" class="view">
   <div style="width:100%;max-width:1020px;margin:0 auto;padding:40px 20px;">
     <div class="section-header">
@@ -524,7 +542,7 @@
 <script src="js/tts.js?v=6"></script>
 <script src="js/ai.js?v=6"></script>
 <script src="js/multiplayer.js?v=6"></script>
-<script src="js/main.js?v=8"></script>
+<script src="js/main.js?v=9"></script>
 
 <script>
   function showRules() { showModal('rules'); }
@@ -561,6 +579,9 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 </body>
 </html>
+
+
+
 
 
 

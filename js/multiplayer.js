@@ -8,10 +8,12 @@ const MP = {
   hostConnection: null, // Para el Cliente
   playerName: 'Jugador',
   roomCode: '',
+  lobbyPlayers: [], // {id, name, isHost, ready}
 
-    initHost: function(onReady, onError) {
+  initHost: function(onReady, onError) {
     this.isHost = true;
     this.roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    this.playerName = 'Host (GM)';
     
     try {
       this.peer = new Peer('tencandles-' + this.roomCode);
@@ -22,6 +24,8 @@ const MP = {
 
     this.peer.on('open', (id) => {
       console.log('Host creado con ID:', id);
+      this.lobbyPlayers = [{ id: 'host', name: this.playerName, isHost: true, ready: false }];
+      this.updateLobbyUI();
       onReady(this.roomCode);
     });
 
@@ -34,12 +38,11 @@ const MP = {
       this.connections.push(conn);
       console.log('Jugador conectado:', conn.peer);
       
-      // Enviar estado actual al nuevo jugador
       conn.on('open', () => {
+        // Enviar estado del lobby inicial
         conn.send({
-          type: 'sync_state',
-          candlesLit: GameState.candlesLit,
-          history: GameState.history // Enviar todo el historial
+          type: 'lobby_update',
+          players: this.lobbyPlayers
         });
       });
 
@@ -49,6 +52,9 @@ const MP = {
       
       conn.on('close', () => {
         this.connections = this.connections.filter(c => c !== conn);
+        this.lobbyPlayers = this.lobbyPlayers.filter(p => p.id !== conn.peer);
+        this.broadcast({ type: 'lobby_update', players: this.lobbyPlayers });
+        this.updateLobbyUI();
       });
     });
   },
@@ -57,7 +63,13 @@ const MP = {
     this.isClient = true;
     this.roomCode = code.toUpperCase();
     this.playerName = name || 'Jugador';
-    this.peer = new Peer();
+    
+    try {
+      this.peer = new Peer();
+    } catch(e) {
+      if(onError) onError("Error al iniciar cliente: " + e.message);
+      return;
+    }
 
     this.peer.on('open', (id) => {
       console.log('Cliente iniciado:', id);
@@ -66,7 +78,7 @@ const MP = {
       this.hostConnection.on('open', () => {
         console.log('Conectado al Host');
         // Avisar al host quién soy
-        this.hostConnection.send({ type: 'player_join', name: this.playerName });
+        this.hostConnection.send({ type: 'join_lobby', name: this.playerName });
         onReady();
       });
 
@@ -86,15 +98,25 @@ const MP = {
 
   // --- HOST HANDLERS ---
   handleClientData: async function(data, conn) {
-    if (data.type === 'player_msg') {
+    if (data.type === 'join_lobby') {
+      this.lobbyPlayers.push({ id: conn.peer, name: data.name, isHost: false, ready: false });
+      this.broadcast({ type: 'lobby_update', players: this.lobbyPlayers });
+      this.updateLobbyUI();
+      appendGMMessage(`🟢 ${data.name} se ha unido a la sala.`, false);
+    }
+    else if (data.type === 'set_ready') {
+      const p = this.lobbyPlayers.find(p => p.id === conn.peer);
+      if (p) p.ready = data.ready;
+      this.broadcast({ type: 'lobby_update', players: this.lobbyPlayers });
+      this.updateLobbyUI();
+    }
+    else if (data.type === 'player_msg') {
       const fullMsg = `[${data.name}]: ${data.text}`;
       appendPlayerMessage(fullMsg);
       GameState.addToHistory('user', fullMsg);
       
-      // Re-transmitir a todos los demás clientes
       this.broadcast({ type: 'chat_player', msg: fullMsg }, conn);
 
-      // Si el GM NO está pausado, hacer que el GM responda
       if (!GameState.gmPaused) {
         setGMThinking(true);
         this.broadcast({ type: 'gm_thinking', state: true });
@@ -117,11 +139,6 @@ const MP = {
         }
       }
     }
-    else if (data.type === 'player_join') {
-      const msg = `🟢 ${data.name} se ha unido a la partida.`;
-      appendGMMessage(msg, false);
-      this.broadcast({ type: 'chat_system', msg: msg });
-    }
   },
 
   broadcast: function(data, excludeConn = null) {
@@ -135,11 +152,17 @@ const MP = {
 
   // --- CLIENT HANDLERS ---
   handleHostData: function(data) {
-    if (data.type === 'sync_state') {
-      // Sincronizar velas
+    if (data.type === 'lobby_update') {
+      this.lobbyPlayers = data.players;
+      this.updateLobbyUI();
+    }
+    else if (data.type === 'start_game') {
+      // El host eligió el módulo y empezó la partida
+      showView('character'); // O 'module' si los clientes también lo ven, pero 'character' es mejor
+    }
+    else if (data.type === 'sync_state') {
       GameState.candlesLit = data.candlesLit;
       updateCandlesVisual();
-      // Limpiar y cargar historial
       const chatBox = document.getElementById('chat-history');
       if (chatBox) chatBox.innerHTML = '';
       for (const msg of data.history) {
@@ -175,6 +198,36 @@ const MP = {
     }
   },
 
+  // --- UI LOBBY ---
+  updateLobbyUI: function() {
+    const list = document.getElementById('lobby-players-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    let allReady = true;
+    for (const p of this.lobbyPlayers) {
+      const li = document.createElement('li');
+      li.style.padding = '8px 0';
+      li.style.borderBottom = '1px solid var(--border)';
+      
+      const statusIcon = p.ready ? '🟢' : '🔴';
+      const statusText = p.ready ? '(Listo)' : '(Esperando...)';
+      li.textContent = `${statusIcon} ${p.name} ${statusText}`;
+      list.appendChild(li);
+
+      if (!p.ready) allReady = false;
+    }
+
+    if (this.isHost) {
+      const btnStart = document.getElementById('btn-lobby-start');
+      if (allReady) {
+        btnStart.style.display = 'inline-block';
+      } else {
+        btnStart.style.display = 'none';
+      }
+    }
+  },
+
   // --- ENVIAR DATOS (CLIENTE) ---
   sendToHost: function(data) {
     if (this.isClient && this.hostConnection && this.hostConnection.open) {
@@ -182,4 +235,3 @@ const MP = {
     }
   }
 };
-
