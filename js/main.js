@@ -88,19 +88,13 @@ function setupMenuListeners() {
         
         // Setup Module Select for Host
         const modSelectUI = document.getElementById('lobby-module-select');
-                if (modSelectUI) {
+        if (modSelectUI) {
           modSelectUI.innerHTML = '<option value="">-- Selecciona un Módulo --</option>';
           Object.values(MODULES).forEach(mod => {
             modSelectUI.innerHTML += `<option value="${mod.id}">${mod.title} - ${mod.tagline}</option>`;
           });
           document.getElementById('lobby-module-host-view').style.display = 'block';
           document.getElementById('lobby-module-client-view').style.display = 'none';
-        }
-        
-        const saved = localStorage.getItem('tencandles_save');
-        const btnLoad = document.getElementById('btn-lobby-load');
-        if (saved && btnLoad) {
-           btnLoad.style.display = 'inline-block';
         }
 
         showView('lobby');
@@ -139,47 +133,7 @@ function setupMenuListeners() {
     });
   });
 
-  // === SISTEMA DE GUARDADO ===
-async function restoreGameUI() {
-  showView('game');
-  initCandleUI();
-  updateGameHUD();
-  renderCharacterSheet();
-  renderInventoryList('game-inventory-list');
-  
-  if (!MP.isClient) {
-    const btnSave = document.getElementById('btn-save-game');
-    if (btnSave) btnSave.style.display = 'inline-block';
-  }
-
-  const log = document.getElementById('chat-log');
-  if (log) log.innerHTML = '';
-  
-  for (const msg of GameState.history) {
-    if (msg.role === 'user') {
-      appendPlayerMessage(msg.text);
-    } else if (msg.role === 'model' && !msg.text.startsWith('[Nota de Sistema')) {
-      appendGMMessage(msg.text, false);
-    }
-  }
-  appendGMMessage('💾 **Partida restaurada con éxito.**', false);
-}
-
-document.getElementById('btn-save-game')?.addEventListener('click', () => {
-  if (MP.isHost || (!MP.isHost && !MP.isClient)) {
-    try {
-      localStorage.setItem('tencandles_save', JSON.stringify(GameState));
-      appendGMMessage('💾 **Partida guardada localmente.**', false);
-      if (MP.isHost) {
-        MP.broadcast({ type: 'chat_system', msg: '💾 **El Host ha guardado la partida.**' });
-      }
-    } catch (e) {
-      alert("Error al guardar: " + e.message);
-    }
-  }
-});
-
-// === LÓGICA DEL LOBBY ===
+  // === LÓGICA DEL LOBBY ===
   const btnLobbyReady = document.getElementById('btn-lobby-ready');
   if (btnLobbyReady) {
     let isReady = false;
@@ -196,25 +150,6 @@ document.getElementById('btn-save-game')?.addEventListener('click', () => {
         MP.updateLobbyUI();
       } else {
         MP.sendToHost({ type: 'set_ready', ready: isReady });
-      }
-    });
-  }
-
-    const btnLobbyLoad = document.getElementById('btn-lobby-load');
-  if (btnLobbyLoad) {
-    btnLobbyLoad.addEventListener('click', () => {
-      if (MP.isHost) {
-        const saved = localStorage.getItem('tencandles_save');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            Object.assign(GameState, parsed);
-            MP.broadcast({ type: 'load_game', state: GameState });
-            restoreGameUI();
-          } catch(e) {
-            alert('No se pudo cargar la partida: ' + e.message);
-          }
-        }
       }
     });
   }
@@ -245,7 +180,7 @@ document.getElementById('btn-save-game')?.addEventListener('click', () => {
       ];
       const p = profiles[Math.floor(Math.random() * profiles.length)];
       
-            document.getElementById('input-name').value = p.name;
+      document.getElementById('input-name').value = p.name;
       document.getElementById('input-appearance').value = p.appearance;
       document.getElementById('input-concept').value = p.concept;
       document.getElementById('input-virtue').value = p.virtue;
@@ -254,14 +189,6 @@ document.getElementById('btn-save-game')?.addEventListener('click', () => {
       document.getElementById('input-brink').value = p.brink;
       document.getElementById('input-they').value = p.they;
       
-      GameState.character.name = p.name;
-      GameState.character.appearance = p.appearance;
-      GameState.character.concept = p.concept;
-      GameState.character.virtue.name = p.virtue;
-      GameState.character.vice.name = p.vice;
-      GameState.character.moment.text = p.moment;
-      GameState.character.brink.text = p.brink;
-      GameState.character.theyBrink = p.they;
       GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
       
       btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
@@ -482,11 +409,8 @@ async function startGame() {
   appendGMMessage('??? *Las luces se apagan. Solo quedan las velas...*', false);
   await sleep(1000);
 
-    // Solo el Host o Jugador Solitario inician la narración
+  // Solo el Host o Jugador Solitario inician la narración
   if (!MP.isClient) {
-    const btnSave = document.getElementById('btn-save-game');
-    if (btnSave) btnSave.style.display = 'inline-block';
-
     setGMThinking(true);
     if (MP.isHost) MP.broadcast({ type: 'gm_thinking', state: true });
     
@@ -758,10 +682,14 @@ async function rollDice() {
   const result = Dice.roll(gs.playerPool, gs.gmPool, hasHopeDie);
   const applied = Dice.applyResult(result);
 
-  // Mostrar resultado visual
+    // Mostrar resultado visual
   renderDiceResult(result, applied);
   updateGameHUD();
   
+  if (typeof MP !== 'undefined' && MP.isHost) {
+     MP.broadcast({ type: 'dice_result', result, applied, pendingRollAction });
+  }
+
   // Dar un segundito para ver los dados antes de cerrar el modal
   await sleep(1500);
   hideModal('dice');
@@ -914,12 +842,10 @@ async function startTruthPhase() {
   const content = document.getElementById('truth-content');
   const finalBtn = document.getElementById('btn-truth-final');
 
-      if (intro) intro.textContent = `Estas cosas son ciertas. El mundo está oscuro. - ${totalTruths} verdad(es) a establecer.`;
-    if (content) content.innerHTML = '';
-    if (finalBtn) finalBtn.style.display = 'none';
-    showModal('truth');
-
-    if (MP.isHost) MP.broadcast({ type: 'truth_phase_start', totalTruths });
+  if (intro) intro.textContent = `Estas cosas son ciertas. El mundo está oscuro. — ${totalTruths} verdad(es) a establecer.`;
+  if (content) content.innerHTML = '';
+  if (finalBtn) finalBtn.style.display = 'none';
+  showModal('truth');
 
   // Turno del jugador
   await collectPlayerTruths(playerTruths, content);
@@ -930,7 +856,75 @@ async function startTruthPhase() {
           gmTruths.forEach(truth => {
         GameState.currentTruths.push(truth);
         appendTruthItem(content, truth, 'gm');
-        if (MP.isHost) MP.broadcast({ type: 'truth_phase_add', truth, source: 'gm' });
+        if (typeof MP !== 'undefined' && MP.isHost) {
+          MP.broadcast({ type: 'truth_phase_add', truth, source: 'gm' });
+        }
+      });
+  }
+
+  // Frase ritual final
+  if (finalBtn) {
+    finalBtn.style.display = 'block';
+          finalBtn.onclick = async () => {
+        hideModal('truth');
+        if (typeof MP !== 'undefined' && MP.isHost) {
+          MP.broadcast({ type: 'truth_phase_end' });
+        }
+        appendGMMessage('🕯️ *Y estamos vivos.*', false);
+      TTS.speak('Y estamos vivos.');
+
+      // Guardar verdades
+      GameState.allTruths.push([...GameState.currentTruths]);
+
+      // Nueva escena
+      GameState.refreshScene();
+      await sleep(1500);
+
+      // GM narra nueva escena
+      setGMThinking(true);
+      try {
+        const narration = await GroqGM.sceneTransitionNarration(GameState.currentTruths);
+        setGMThinking(false);
+        appendGMMessage(narration, true);
+        updateGameHUD();
+        updateCharacterSheetState();
+      } catch (e) {
+        setGMThinking(false);
+        appendGMMessage(`Error al narrar nueva escena: ${e.message}`, false);
+      }
+    };
+  }
+}
+
+function collectPlayerTruths(count, container) {
+  return new Promise(resolve => {
+    let collected = 0;
+
+    function addTruthInput() {
+      if (collected >= count) { resolve(); return; }
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'truth-input-wrapper';
+      wrapper.innerHTML = `
+        <p class="truth-prompt">Verdad ${collected + 1} de ${count} (tú):</p>
+        <div class="truth-input-row">
+          <input type="text" class="truth-input" placeholder="Una verdad sobre lo que ahora es cierto..." />
+          <button class="btn-primary btn-confirm-truth">Confirmar</button>
+        </div>
+      `;
+      container.appendChild(wrapper);
+      wrapper.querySelector('input').focus();
+
+      wrapper.querySelector('.btn-confirm-truth').addEventListener('click', () => {
+        const val = wrapper.querySelector('input').value.trim();
+        if (!val) return;
+                GameState.currentTruths.push(val);
+        wrapper.innerHTML = `<div class="truth-item player">👤 ${val}</div>`;
+        if (typeof MP !== 'undefined' && MP.isHost) {
+          MP.broadcast({ type: 'truth_phase_add', truth: val, source: 'player' });
+        }
+        collected++;
+        addTruthInput();
       });
     }
 
@@ -1122,14 +1116,31 @@ function setGMThinking(val) {
 }
 
 function updateGameHUD() {
-  document.getElementById('hud-candles').textContent = `${GameState.candlesLit}/10`;
-  document.getElementById('hud-scene').textContent = GameState.scene;
-  document.getElementById('hud-pool').textContent = GameState.playerPool;
-  document.getElementById('hud-gm-pool').textContent = GameState.gmPool;
+  const gs = GameState;
+  
+  // Velas
+  const el = document.getElementById('hud-candles');
+  if (el) el.textContent = `${gs.candlesLit}/10`;
 
-  if (typeof MP !== 'undefined' && MP.isHost && typeof MP.broadcastState === 'function') {
-    MP.broadcastState();
-  }
+  // Escena
+  const es = document.getElementById('hud-scene');
+  if (es) es.textContent = gs.scene;
+
+  // Pool
+  const ep = document.getElementById('hud-pool');
+  if (ep) ep.textContent = gs.playerPool;
+
+  // GM Pool
+  const eg = document.getElementById('hud-gm-pool');
+  if (eg) eg.textContent = gs.gmPool;
+
+  // Fase final
+  const ef = document.getElementById('final-phase-banner');
+  if (ef) ef.style.display = gs.isFinalPhase ? 'block' : 'none';
+
+  // Dado de esperanza
+  const eh = document.getElementById('hud-hope');
+  if (eh) eh.style.display = gs.character.moment.hopeDie ? 'inline-block' : 'none';
 }
 
 function renderCharacterSheet() {
@@ -1306,11 +1317,6 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
-
-
-
-
-
 
 
 
