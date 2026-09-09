@@ -245,7 +245,7 @@ document.getElementById('btn-save-game')?.addEventListener('click', () => {
       ];
       const p = profiles[Math.floor(Math.random() * profiles.length)];
       
-      document.getElementById('input-name').value = p.name;
+            document.getElementById('input-name').value = p.name;
       document.getElementById('input-appearance').value = p.appearance;
       document.getElementById('input-concept').value = p.concept;
       document.getElementById('input-virtue').value = p.virtue;
@@ -254,6 +254,14 @@ document.getElementById('btn-save-game')?.addEventListener('click', () => {
       document.getElementById('input-brink').value = p.brink;
       document.getElementById('input-they').value = p.they;
       
+      GameState.character.name = p.name;
+      GameState.character.appearance = p.appearance;
+      GameState.character.concept = p.concept;
+      GameState.character.virtue.name = p.virtue;
+      GameState.character.vice.name = p.vice;
+      GameState.character.moment.text = p.moment;
+      GameState.character.brink.text = p.brink;
+      GameState.character.theyBrink = p.they;
       GameState.character.inventory = ["Linterna (pocas pilas)", "Navaja de bolsillo", "Botella de agua (mitad)"];
       
       btnLobbyPreset.textContent = `⚡ Personaje: ${p.name} (Generado)`;
@@ -906,10 +914,12 @@ async function startTruthPhase() {
   const content = document.getElementById('truth-content');
   const finalBtn = document.getElementById('btn-truth-final');
 
-  if (intro) intro.textContent = `Estas cosas son ciertas. El mundo está oscuro. — ${totalTruths} verdad(es) a establecer.`;
-  if (content) content.innerHTML = '';
-  if (finalBtn) finalBtn.style.display = 'none';
-  showModal('truth');
+      if (intro) intro.textContent = `Estas cosas son ciertas. El mundo está oscuro. - ${totalTruths} verdad(es) a establecer.`;
+    if (content) content.innerHTML = '';
+    if (finalBtn) finalBtn.style.display = 'none';
+    showModal('truth');
+
+    if (MP.isHost) MP.broadcast({ type: 'truth_phase_start', totalTruths });
 
   // Turno del jugador
   await collectPlayerTruths(playerTruths, content);
@@ -917,69 +927,10 @@ async function startTruthPhase() {
   // Turno del GM
   if (gmTruthsCount > 0) {
     const gmTruths = await GroqGM.generateGMTruths(gmTruthsCount);
-    gmTruths.forEach(truth => {
-      GameState.currentTruths.push(truth);
-      appendTruthItem(content, truth, 'gm');
-    });
-  }
-
-  // Frase ritual final
-  if (finalBtn) {
-    finalBtn.style.display = 'block';
-    finalBtn.onclick = async () => {
-      hideModal('truth');
-      appendGMMessage('🕯️ *Y estamos vivos.*', false);
-      TTS.speak('Y estamos vivos.');
-
-      // Guardar verdades
-      GameState.allTruths.push([...GameState.currentTruths]);
-
-      // Nueva escena
-      GameState.refreshScene();
-      await sleep(1500);
-
-      // GM narra nueva escena
-      setGMThinking(true);
-      try {
-        const narration = await GroqGM.sceneTransitionNarration(GameState.currentTruths);
-        setGMThinking(false);
-        appendGMMessage(narration, true);
-        updateGameHUD();
-        updateCharacterSheetState();
-      } catch (e) {
-        setGMThinking(false);
-        appendGMMessage(`Error al narrar nueva escena: ${e.message}`, false);
-      }
-    };
-  }
-}
-
-function collectPlayerTruths(count, container) {
-  return new Promise(resolve => {
-    let collected = 0;
-
-    function addTruthInput() {
-      if (collected >= count) { resolve(); return; }
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'truth-input-wrapper';
-      wrapper.innerHTML = `
-        <p class="truth-prompt">Verdad ${collected + 1} de ${count} (tú):</p>
-        <div class="truth-input-row">
-          <input type="text" class="truth-input" placeholder="Una verdad sobre lo que ahora es cierto..." />
-          <button class="btn-primary btn-confirm-truth">Confirmar</button>
-        </div>
-      `;
-      container.appendChild(wrapper);
-      wrapper.querySelector('input').focus();
-
-      wrapper.querySelector('.btn-confirm-truth').addEventListener('click', () => {
-        const val = wrapper.querySelector('input').value.trim();
-        if (!val) return;
-        GameState.currentTruths.push(val);
-        wrapper.innerHTML = `<div class="truth-item player">👤 ${val}</div>`;
-        collected++;
-        addTruthInput();
+          gmTruths.forEach(truth => {
+        GameState.currentTruths.push(truth);
+        appendTruthItem(content, truth, 'gm');
+        if (MP.isHost) MP.broadcast({ type: 'truth_phase_add', truth, source: 'gm' });
       });
     }
 
@@ -1171,31 +1122,14 @@ function setGMThinking(val) {
 }
 
 function updateGameHUD() {
-  const gs = GameState;
-  
-  // Velas
-  const el = document.getElementById('hud-candles');
-  if (el) el.textContent = `${gs.candlesLit}/10`;
+  document.getElementById('hud-candles').textContent = `${GameState.candlesLit}/10`;
+  document.getElementById('hud-scene').textContent = GameState.scene;
+  document.getElementById('hud-pool').textContent = GameState.playerPool;
+  document.getElementById('hud-gm-pool').textContent = GameState.gmPool;
 
-  // Escena
-  const es = document.getElementById('hud-scene');
-  if (es) es.textContent = gs.scene;
-
-  // Pool
-  const ep = document.getElementById('hud-pool');
-  if (ep) ep.textContent = gs.playerPool;
-
-  // GM Pool
-  const eg = document.getElementById('hud-gm-pool');
-  if (eg) eg.textContent = gs.gmPool;
-
-  // Fase final
-  const ef = document.getElementById('final-phase-banner');
-  if (ef) ef.style.display = gs.isFinalPhase ? 'block' : 'none';
-
-  // Dado de esperanza
-  const eh = document.getElementById('hud-hope');
-  if (eh) eh.style.display = gs.character.moment.hopeDie ? 'inline-block' : 'none';
+  if (typeof MP !== 'undefined' && MP.isHost && typeof MP.broadcastState === 'function') {
+    MP.broadcastState();
+  }
 }
 
 function renderCharacterSheet() {
@@ -1372,6 +1306,10 @@ function setupSpeechToText() {
 
 // Inicializar cuando cargue el DOM
 document.addEventListener('DOMContentLoaded', setupSpeechToText);
+
+
+
+
 
 
 

@@ -120,45 +120,14 @@ const MP = {
       if (rollBtn) rollBtn.click();
       else rollDice(); // Si el modal no está abierto, lo forza
     }
-        else if (data.type === 'sync_character') {
+            else if (data.type === 'sync_character') {
       if (!GameState.characters) GameState.characters = [];
+      data.character.playerName = data.name; // Guardamos el nombre real del jugador
       const idx = GameState.characters.findIndex(c => c.name === data.character.name);
       if (idx >= 0) GameState.characters[idx] = data.character;
       else GameState.characters.push(data.character);
-      appendGMMessage(`📝 ${data.name} ha terminado de crear su personaje: ${data.character.name}.`, false);
+      appendGMMessage(`👤 ${data.name} ha terminado de crear su personaje: ${data.character.name}.`, false);
     }
-    else if (data.type === 'call_gm') {
-      const btnCallGM = document.getElementById('btn-call-gm');
-      if (btnCallGM) btnCallGM.click();
-    }
-    else if (data.type === 'player_msg') {
-      const fullMsg = `[${data.name}]: ${data.text}`;
-      appendPlayerMessage(fullMsg);
-      GameState.addToHistory('user', fullMsg);
-      
-      this.broadcast({ type: 'chat_player', msg: fullMsg }, conn);
-
-      if (!GameState.gmPaused) {
-        setGMThinking(true);
-        this.broadcast({ type: 'gm_thinking', state: true });
-        try {
-          const response = await GroqGM.ask(fullMsg);
-          setGMThinking(false);
-          this.broadcast({ type: 'gm_thinking', state: false });
-          
-          appendGMMessage(response, true);
-          this.broadcast({ type: 'chat_gm', msg: response });
-
-          if (response.includes('[TIRADA DE DADOS REQUERIDA]')) {
-            showRollPrompt("Acción de " + data.name);
-            this.broadcast({ type: 'roll_prompt', action: "Acción de " + data.name });
-          }
-        } catch(e) {
-          setGMThinking(false);
-          this.broadcast({ type: 'gm_thinking', state: false });
-          appendGMMessage(`⚠️ Error de IA: ${e.message}`, false);
-        }
-      }
     }
   },
 
@@ -177,8 +146,23 @@ const MP = {
       this.lobbyPlayers = data.players;
       this.updateLobbyUI();
     }
-        else if (data.type === 'start_game') {
-      showView('game');
+                else if (data.type === 'start_game') {
+      // Force sync character if not sent yet
+      if (GameState.character.name) {
+         MP.sendToHost({ type: 'sync_character', character: GameState.character });
+      } else {
+         // Si sigue vacio, intentar jalar de los inputs manuales
+         GameState.character.name = document.getElementById('input-name')?.value || 'Desconocido';
+         GameState.character.concept = document.getElementById('input-concept')?.value || 'Sin concepto';
+         MP.sendToHost({ type: 'sync_character', character: GameState.character });
+      }
+      
+      if (typeof startGame === 'function') startGame();
+    }
+    else if (data.type === 'roll_prompt') {
+      if (typeof showRollPrompt === 'function') {
+        showRollPrompt(data.action);
+      }
     }
     else if (data.type === 'start_character_creation') {
       showView('character');
@@ -191,10 +175,11 @@ const MP = {
       if (nameEl) nameEl.textContent = GameState.selectedModule.title;
       if (descEl) descEl.textContent = GameState.selectedModule.tagline;
     }
-        else if (data.type === 'load_game') {
+            else if (data.type === 'load_game') {
       Object.assign(GameState, data.state);
       
-      const myChar = GameState.characters?.find(c => c.name === MP.playerName);
+      // Intentar buscar por playerName, si no, fallback al nombre del personaje (por si aca)
+      const myChar = GameState.characters?.find(c => c.playerName === MP.playerName || c.name === MP.playerName);
       if (myChar) {
          GameState.character = myChar;
       }
@@ -203,15 +188,39 @@ const MP = {
         restoreGameUI();
       }
     }
+      
+      if (typeof restoreGameUI === 'function') {
+        restoreGameUI();
+      }
+    }
+                    else if (data.type === 'dice_result') {
+      if (typeof hideModal === 'function') hideModal('dice');
+      if (typeof renderDiceResult === 'function') renderDiceResult(data.result, data.applied);
+    }
+    else if (data.type === 'truth_phase_start') {
+      const intro = document.getElementById('truth-intro');
+      const content = document.getElementById('truth-content');
+      const finalBtn = document.getElementById('btn-truth-final');
+      if (intro) intro.textContent = `Estas cosas son ciertas. El mundo está oscuro. - ${data.totalTruths} verdad(es) a establecer.`;
+      if (content) content.innerHTML = '';
+      if (finalBtn) finalBtn.style.display = 'none'; // Clients can't click it
+      if (typeof showModal === 'function') showModal('truth');
+    }
+    else if (data.type === 'truth_phase_add') {
+      const content = document.getElementById('truth-content');
+      if (typeof appendTruthItem === 'function') appendTruthItem(content, data.truth, data.source);
+    }
+    else if (data.type === 'truth_phase_end') {
+      if (typeof hideModal === 'function') hideModal('truth');
+    }
     else if (data.type === 'sync_state') {
       GameState.candlesLit = data.candlesLit;
-      updateCandlesVisual();
-      const chatBox = document.getElementById('chat-history');
-      if (chatBox) chatBox.innerHTML = '';
-      for (const msg of data.history) {
-        if (msg.role === 'user') appendPlayerMessage(msg.text);
-        else appendGMMessage(msg.text, false);
-      }
+      GameState.scene = data.scene;
+      GameState.playerPool = data.playerPool;
+      GameState.gmPool = data.gmPool;
+      if (typeof updateCandlesVisual === 'function') updateCandlesVisual();
+      if (typeof updateGameHUD === 'function') updateGameHUD();
+    }
     }
     else if (data.type === 'chat_player') {
       appendPlayerMessage(data.msg);
@@ -234,6 +243,22 @@ const MP = {
     }
     else if (data.type === 'dice_result') {
       renderDiceResult(data.result, data.applied);
+    }
+    else if (data.type === 'truth_phase_start') {
+      const intro = document.getElementById('truth-intro');
+      const content = document.getElementById('truth-content');
+      const finalBtn = document.getElementById('btn-truth-final');
+      if (intro) intro.textContent = `Estas cosas son ciertas. El mundo está oscuro. - ${data.totalTruths} verdad(es) a establecer.`;
+      if (content) content.innerHTML = '';
+      if (finalBtn) finalBtn.style.display = 'none'; // Clients can't click it
+      if (typeof showModal === 'function') showModal('truth');
+    }
+    else if (data.type === 'truth_phase_add') {
+      const content = document.getElementById('truth-content');
+      if (typeof appendTruthItem === 'function') appendTruthItem(content, data.truth, data.source);
+    }
+    else if (data.type === 'truth_phase_end') {
+      if (typeof hideModal === 'function') hideModal('truth');
     }
         else if (data.type === 'hide_modal') {
       hideModal(data.modalId);
@@ -281,6 +306,15 @@ const MP = {
     }
   }
 };
+
+
+
+
+
+
+
+
+
 
 
 
